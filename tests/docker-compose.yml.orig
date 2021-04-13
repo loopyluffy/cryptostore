@@ -1,0 +1,88 @@
+version: '3.4'
+
+services:
+    maria:
+    # docker run --name mcs-mysql -e MYSQL_ROOT_PASSWORD=remd1134 -p 3440:3306 -v /Users/loopyluffy/Desktop/docker/container/data/mcs-mysql:/var/lib/mysql -v /Users/loopyluffy/Desktop/docker/container/conf/mcs-mysql/conf.d:/etc/mysql/conf.d -d mysql:5.7
+        image: mysql:5.7
+        restart: always
+        container_name: mcs-mysql
+        environment:
+            # MYSQL_DATABASE: 'db'
+            # So you don't have to use root, but you can if you like
+            MYSQL_USER: 'user'
+            # You can use whatever password you like
+            MYSQL_PASSWORD: 'user'
+            # Password for root access
+            MYSQL_ROOT_PASSWORD: 'remd1134'
+        ports:
+            # <Port exposed> : < MySQL Port running inside container>
+            # - 3440:3306
+            - 3306:3306
+        expose:
+            # Opens port 3306 on the container
+            - 3306
+        # Where our data will be persisted
+        volumes:
+            - /Users/loopyluffy/Desktop/docker/container/data/mcs-mysql:/var/lib/mysql
+            - /Users/loopyluffy/Desktop/docker/container/conf/mcs-mysql/conf.d:/etc/mysql/conf.d
+    mongo:
+    # docker run --name mcs-mongo -p 27017:27017 -v /Users/loopyluffy/Desktop/docker/container/data/mcs-mongo:/data/db -v /Users/loopyluffy/Desktop/docker/container/backup/mcs-mongo:/backup -d mongo:3.6
+    # mongorestore /backup
+        image: mongo:3.6
+        restart: always 
+        container_name: mcs-mongo
+        environment:
+            - MONGO_DATA_DIR=/data/db
+            # - MONGO_LOG_DIR=/dev/null
+        volumes:
+            - /Users/loopyluffy/Desktop/docker/container/data/mcs-mongo:/data/db
+            - /Users/loopyluffy/Desktop/docker/container/backup/mcs-mongo:/backup
+        ports:
+            - 27017:27017
+        # command: mongod --smallfiles --logpath=/dev/null # --quiet
+    mcsmarketengine:
+        image: ${DOCKER_REGISTRY-}mcsmarketengine
+        container_name: mcs-market-engine
+        build:
+            context: .
+            # dockerfile: MCSMarketEngine/MCSMarketEngine/Dockerfile
+            dockerfile: MarketEngine.Dockerfile
+        depends_on:
+            - mongo
+            - maria
+        ports:
+            - 15001:15001
+            - 15002:15002
+            - 15003:15003
+            - 15004:15004
+            - 15005:15005
+            - 15101:15101
+            - 15102:15102
+            - 15103:15103
+            - 15104:15104
+            - 15105:15105
+            - 15201:15201
+    mcschartengine:
+        image: ${DOCKER_REGISTRY-}mcschartengine
+        container_name: mcs-chart-engine
+        build:
+            context: .
+            dockerfile: ChartEngine.Dockerfile
+        depends_on:
+        #    - mongo
+        #    - maria
+            - mcsmarketengine
+        # links:
+        #    - mcsmarketengine
+        ports:
+            - 15301:15301
+            - 15302:15302
+            - 15303:15303
+            - 15304:15304
+            - 15305:15305
+            # - 15101:15101
+# Names our volume
+# volumes:
+#  my-db:
+#    - /Users/loopyluffy/Desktop/docker/container/data/mcs-mysql
+

@@ -16,6 +16,9 @@ from cryptostore.log import get_logger
 from cryptostore.aggregator.aggregator import Aggregator
 from cryptostore.plugin.controller import PluginController
 
+# test new AttrDict @logan
+# from cryptostore.luffy_config import DynamicConfig
+
 
 LOG = get_logger('cryptostore', 'cryptostore.log', logging.INFO, size=50000000, num_files=10)
 
@@ -78,9 +81,10 @@ class Cryptostore:
         self.spawner.start()
         LOG.info("Spawner started")
 
-        self.aggregator = Aggregator(config_file=self.cfg_path)
-        self.aggregator.start()
-        LOG.info("Aggregator started")
+        # blocked by @logan
+        # self.aggregator = Aggregator(config_file=self.cfg_path)
+        # self.aggregator.start()
+        # LOG.info("Aggregator started")
 
         loop = asyncio.get_event_loop()
         self.config = DynamicConfig(file_name=self.cfg_path, callback=self._reconfigure)

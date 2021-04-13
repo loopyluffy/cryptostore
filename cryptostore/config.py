@@ -50,6 +50,19 @@ class Config:
     def __contains__(self, item):
         return item in self.config
 
+    # to fix a pickling bug, added by @logan
+    def __getstate__(self):
+        """
+        Serialize the object.
+        """
+        return self.__dict__
+
+    def __setstate__(self, state):
+        """
+        Deserialize the object.
+        """
+        self.__dict__ = state
+
 
 class DynamicConfig(Config):
     def __init__(self, file_name=None, reload_interval=10, callback=None):

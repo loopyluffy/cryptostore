@@ -1,0 +1,47 @@
+version: '3.7'
+
+services:
+    mongo:
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "2000k"
+                max-file: "10"
+    # docker run --name mcs-mongo -p 27017:27017 -v /Users/loopyluffy/Desktop/docker/container/data/mcs-mongo:/data/db -v /Users/loopyluffy/Desktop/docker/container/backup/mcs-mongo:/backup -d mongo:3.6
+    # mongorestore /backup
+        image: mongo:3.6
+        restart: always 
+        container_name: mcs-mongo
+        environment:
+            - MONGO_DATA_DIR=/data/db
+            # - MONGO_LOG_DIR=/dev/null
+        volumes:
+            - /Users/loopyluffy/Desktop/docker/container/data/mcs-mongo:/data/db
+            - /Users/loopyluffy/Desktop/docker/container/backup/mcs-mongo:/backup
+        ports:
+            - 27017:27017
+            # - '37017:27017'
+        expose:
+            - 27017
+        # command: mongod --smallfiles --logpath=/dev/null # --quiet
+    # redisdb:
+    #     # depends_on:
+    #     #     - mongo
+    #     #     - maria
+    #     logging:
+    #         driver: "json-file"
+    #         options:
+    #             max-size: "2000k"
+    #             max-file: "10"
+    #     image: redis:latest
+    #     # restart: always
+    #     container_name: mcs-redis
+    #     volumes:
+    #         - /Users/loopyluffy/Desktop/docker/container/conf/mcs-redis/redis.conf:/usr/local/etc/redis/redis.conf
+    #         - /Users/loopyluffy/Desktop/docker/container/data/mcs-redis:/data
+    #     ports:
+    #         - 6379:6379
+    #     expose:
+    #         - 6379
+    #     command: ["redis-server", "--save", "''", "--appendonly", "no"]
+

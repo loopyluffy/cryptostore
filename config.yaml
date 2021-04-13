@@ -6,11 +6,13 @@
 # retention_time: (redis only) if data removal is enabled (via del_after_read) will allow retention of data in redis for N seconds.
 # socket: (redis only) allows redis connections via a unix domain socket
 # start_flush: toggles if redis/kafka should be flushed at the start. Primarily for debugging, it will flush ALL of redis/kafka
-cache: redis
+# cache: redis
+cache: kafka
 
 kafka:
     # ip/port are for the bootstrap server
     ip: '127.0.0.1'
+    topic_key: 'logan.test02-'
     port: 9092
     start_flush: true
 redis:
@@ -44,7 +46,22 @@ redis:
 # updates will be dropped. Can also set up book_depth with snapshot_interval enabled.
 
 exchanges:
-    BITMEX:
+    # BITMEX:
+    #     channel_timeouts:
+    #         l2_book: 30
+    #         trades: 120
+    #         ticker: 120
+    #         funding: -1
+    #     retries: -1
+    #     l2_book:
+    #         symbols: [BTC-USD]
+    #         max_depth: 10
+    #         book_delta: false
+    #         book_interval: 100000
+    #     trades: [BTC-USD]
+    #     ticker: [BTC-USD]
+    #     funding: [BTC-USD]
+    BINANCE_DELIVERY:
         channel_timeouts:
             l2_book: 30
             trades: 120
@@ -52,24 +69,24 @@ exchanges:
             funding: -1
         retries: -1
         l2_book:
-            symbols: [BTC-USD]
+            symbols: [BTC-USD_PERP]
             max_depth: 10
-            book_delta: true
+            book_delta: false
             book_interval: 100000
-        trades: [BTC-USD]
-        ticker: [BTC-USD]
-        funding: [BTC-USD]
-    COINBASE:
-        retries: -1
-        l3_book:
-            symbols: [BTC-USD]
-            book_delta: true
-            book_interval: 100000
-        trades: [BTC-USD, ETH-USD, ETH-BTC]
-        ticker: [BTC-USD]
+        trades: [BTC-USD_PERP]
+        ticker: [BTC-USD_PERP]
+        funding: [BTC-USD_PERP]
+    # COINBASE:
+    #     retries: -1
+    #     l3_book:
+    #         symbols: [BTC-USD]
+    #         book_delta: true
+    #         book_interval: 100000
+    #     trades: [BTC-USD, ETH-USD, ETH-BTC]
+    #     ticker: [BTC-USD]
 
 # Where to store the data. Currently arctic, influx, elastic, and parquet are supported. More than one can be enabled
-storage: [arctic, influx]
+# storage: [arctic, influx]
 # These two values configure how many times to retry a write (before dying)
 # and how long to wait between attempts to write after a failure is encountered.
 storage_retries: 5
@@ -175,7 +192,11 @@ storage_interval: 60
 #
 
 # Cryptostore Plugin Interface
-#plugins:
+plugins:
+    restfeed:
+        module: [cryptostore.plugin.restfeed, Restfeed]
+        config: config.yaml
+        # config: config-restfeed.yaml
 #    backfill:
         # The import path, and class name
         # from cryptostore.plugin.backfill import Backfill
@@ -190,3 +211,6 @@ storage_interval: 60
 #    COINBASE:
 #        BTC-USD:
 #            start: '2017-01-01'
+restfeed:
+    BINANCE_DELIVERY:
+        orders: [BTCUSD_PERP]

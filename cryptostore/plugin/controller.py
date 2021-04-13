@@ -7,6 +7,8 @@ associated with this software.
 import os
 
 from cryptostore.config import Config
+# test new AttrDict @logan
+# from cryptostore.luffy_config import Config
 
 
 class PluginController:
@@ -29,12 +31,16 @@ class PluginController:
         if self.cfg and 'plugins' in self.cfg:
             if self.cfg and isinstance(self.cfg.plugins, dict):
                 for _, plugin in self.cfg.plugins.items():
-                    module = plugin.module
+                    # module = plugin.module
+                    # bug: Config object can't be double depth attributable @logan
+                    module = plugin['module']
                     if isinstance(module, list):
                         obj = getattr(__import__(module[0], fromlist=[module[1]]), module[1])
                     else:
                         obj = __import__(module)
-                    self.plugins.append(obj(plugin.config))
+                    # self.plugins.append(obj(plugin.config))
+                    # bug: Config object can't be double depth attributable @logan
+                    self.plugins.append(obj(plugin['config']))
                     self.plugins[-1].start()
 
     def stop(self):

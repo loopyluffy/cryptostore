@@ -31,6 +31,10 @@ class Collector(Process):
         timeouts = self.exchange_config.pop('channel_timeouts', {})
         fh = FeedHandler(retries=retries)
 
+        # topic key setting @logan
+        topic_key = self.config['kafka']['topic_key']
+        # topic_key = topic_key.lower() 
+
         for callback_type, value in self.exchange_config.items():
             cb = {}
             delta = False
@@ -75,15 +79,27 @@ class Collector(Process):
                 kwargs = {'bootstrap': self.config['kafka']['ip'], 'port': self.config['kafka']['port']}
 
             if callback_type == TRADES:
-                cb[TRADES] = [trade_cb(**kwargs)]
+                # to use topic_key @logan
+                # cb[TRADES] = [trade_cb(**kwargs)]
+                # cb[TRADES] = [trade_cb(key='logan-trades', **kwargs)]
+                cb[TRADES] = [trade_cb(key=topic_key, **kwargs)]
+                # non normalized data callback added @logan
+                # cb[TRADES_RAW] = [trade_raw_cb(key=topic_key, **kwargs)]
             elif callback_type == LIQUIDATIONS:
-                cb[LIQUIDATIONS] = [liq_cb(**kwargs)]
+                # cb[LIQUIDATIONS] = [liq_cb(**kwargs)]
+                cb[LIQUIDATIONS] = [liq_cb(key=topic_key, **kwargs)]
             elif callback_type == FUNDING:
-                cb[FUNDING] = [funding_cb(**kwargs)]
+                # cb[FUNDING] = [funding_cb(**kwargs)]
+                cb[FUNDING] = [funding_cb(key=topic_key, **kwargs)]
             elif callback_type == TICKER:
-                cb[TICKER] = [ticker_cb(**kwargs)]
+                # to use topic_key @logan
+                # cb[TICKER] = [ticker_cb(**kwargs)]
+                # cb[TICKER] = [ticker_cb(key='logan2-ticker', **kwargs)]
+                cb[TICKER] = [ticker_cb(key=topic_key, **kwargs)]
             elif callback_type == L2_BOOK:
-                cb[L2_BOOK] = [book_cb(key=L2_BOOK, **kwargs)]
+                # to use topic_key @logan
+                # cb[L2_BOOK] = [book_cb(key=L2_BOOK, **kwargs)]
+                cb[L2_BOOK] = [book_cb(key=topic_key, **kwargs)]
                 if book_up:
                     cb[BOOK_DELTA] = [book_up(key=L2_BOOK, **kwargs)]
             elif callback_type == L3_BOOK:
@@ -91,9 +107,11 @@ class Collector(Process):
                 if book_up:
                     cb[BOOK_DELTA] = [book_up(key=L3_BOOK, **kwargs)]
             elif callback_type == OPEN_INTEREST:
-                cb[OPEN_INTEREST] = [oi_cb(**kwargs)]
+                # cb[OPEN_INTEREST] = [oi_cb(**kwargs)]
+                cb[OPEN_INTEREST] = [oi_cb(key=topic_key, **kwargs)]
             elif callback_type == CANDLES:
-                cb[CANDLES] = [candles_cb(**kwargs)]
+                # cb[CANDLES] = [candles_cb(**kwargs)]
+                cb[CANDLES] = [candles_cb(key=topic_key, **kwargs)]
 
             if 'pass_through' in self.config:
                 if self.config['pass_through']['type'] == 'zmq':
