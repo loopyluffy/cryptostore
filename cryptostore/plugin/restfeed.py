@@ -56,8 +56,9 @@ class Restfeed(Plugin):
                         time.sleep(300)
                         continue
 
-                    time.sleep(10)
-                    continue
+                    # time.sleep(10)
+                    # continue
+                    break
 
         """
         r = Rest()

@@ -213,4 +213,4 @@ plugins:
 #            start: '2017-01-01'
 restfeed:
     BINANCE_DELIVERY:
-        orders: [BTCUSD_PERP]
+        orders: [BTC-USD_PERP]
