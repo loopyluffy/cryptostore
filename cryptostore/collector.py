@@ -4,13 +4,14 @@ Copyright (C) 2018-2021  Bryant Moscon - bmoscon@gmail.com
 Please see the LICENSE file for the terms and conditions
 associated with this software.
 '''
+import inspect
+import logging
 import os
 from multiprocessing import Process
-import logging
 
 from cryptofeed import FeedHandler
 from cryptofeed.defines import TRADES, L2_BOOK, L3_BOOK, BOOK_DELTA, TICKER, FUNDING, OPEN_INTEREST, LIQUIDATIONS, CANDLES
-
+from cryptofeed.exchanges import EXCHANGE_MAP
 
 LOG = logging.getLogger('cryptostore')
 
@@ -23,32 +24,51 @@ class Collector(Process):
         super().__init__()
         self.daemon = True
 
+    def _exchange_feed_options(self, feed_config: dict):
+        """
+        Parses feed config values from config.yaml.
+        Exchange specific options will be derived from keyword args of the exchange FeedHandler class.
+
+        ex: 'depth_interval' option will be consumed from config since it is found in cryptofeed.exchange.Binance.__init__
+        """
+        # base Feed options
+        base_feed_options = {'book_interval', 'max_depth', 'snapshot_interval'}
+
+        # exchange specific Feed options
+        ExchangeFeedClass = EXCHANGE_MAP[self.exchange]
+        exchange_feed_options = inspect.signature(ExchangeFeedClass.__init__).parameters
+        exchange_feed_options = {key for key in exchange_feed_options if key not in {'self', '**kwargs'}}
+
+        available_options = base_feed_options.union(exchange_feed_options)
+
+        fh_kwargs = {'book_interval': 1000}
+        for key, value in feed_config.items():
+            if key in available_options:
+                fh_kwargs[key] = value
+
+        return fh_kwargs
+
     def run(self):
         LOG.info("Collector for %s running on PID %d", self.exchange, os.getpid())
-
         cache = self.config['cache']
         retries = self.exchange_config.pop('retries', 30)
         timeouts = self.exchange_config.pop('channel_timeouts', {})
-        fh = FeedHandler(retries=retries)
+        http_proxy = self.exchange_config.pop('http_proxy', None)
+        fh = FeedHandler()
 
-        # topic key setting @logan
-        topic_key = self.config['kafka']['topic_key']
-        # topic_key = topic_key.lower() 
+        for callback_type, feed_config in self.exchange_config.items():
+            # config value can be a dict or list of symbols
+            feed_kwargs = {'retries': retries, 'timeout': timeouts.get(callback_type, 120)}
+            if http_proxy is not None:
+                feed_kwargs['http_proxy'] = http_proxy
 
-        for callback_type, value in self.exchange_config.items():
+            if isinstance(feed_config, dict):
+                feed_kwargs.update(self._exchange_feed_options(feed_config))
+                book_delta = feed_config.get('book_delta', False)
+            else:
+                book_delta = False
+
             cb = {}
-            delta = False
-            fh_kwargs = {'timeout': timeouts.get(callback_type, 120), 'book_interval': 1000}
-
-            if 'book_interval' in value:
-                fh_kwargs['book_interval'] = value['book_interval']
-            if 'book_delta' in value and value['book_delta']:
-                delta = True
-            if 'max_depth' in value:
-                fh_kwargs['max_depth'] = value['max_depth']
-            if 'snapshot_interval' in value:
-                fh_kwargs['snapshot_interval'] = value['snapshot_interval']
-
             if callback_type in (L2_BOOK, L3_BOOK):
                 self.exchange_config[callback_type] = self.exchange_config[callback_type]['symbols']
 
@@ -60,7 +80,7 @@ class Collector(Process):
                 from cryptofeed.backends.redis import TradeStream, BookStream, BookDeltaStream, TickerStream, FundingStream, OpenInterestStream, LiquidationsStream, CandlesStream
                 trade_cb = TradeStream
                 book_cb = BookStream
-                book_up = BookDeltaStream if delta else None
+                book_up = BookDeltaStream if book_delta else None
                 ticker_cb = TickerStream
                 funding_cb = FundingStream
                 oi_cb = OpenInterestStream
@@ -70,7 +90,7 @@ class Collector(Process):
                 from cryptofeed.backends.kafka import TradeKafka, BookKafka, BookDeltaKafka, TickerKafka, FundingKafka, OpenInterestKafka, LiquidationsKafka, CandlesKafka
                 trade_cb = TradeKafka
                 book_cb = BookKafka
-                book_up = BookDeltaKafka if delta else None
+                book_up = BookDeltaKafka if book_delta else None
                 ticker_cb = TickerKafka
                 funding_cb = FundingKafka
                 oi_cb = OpenInterestKafka
@@ -79,27 +99,15 @@ class Collector(Process):
                 kwargs = {'bootstrap': self.config['kafka']['ip'], 'port': self.config['kafka']['port']}
 
             if callback_type == TRADES:
-                # to use topic_key @logan
-                # cb[TRADES] = [trade_cb(**kwargs)]
-                # cb[TRADES] = [trade_cb(key='logan-trades', **kwargs)]
-                cb[TRADES] = [trade_cb(key=topic_key, **kwargs)]
-                # non normalized data callback added @logan
-                # cb[TRADES_RAW] = [trade_raw_cb(key=topic_key, **kwargs)]
+                cb[TRADES] = [trade_cb(**kwargs)]
             elif callback_type == LIQUIDATIONS:
-                # cb[LIQUIDATIONS] = [liq_cb(**kwargs)]
-                cb[LIQUIDATIONS] = [liq_cb(key=topic_key, **kwargs)]
+                cb[LIQUIDATIONS] = [liq_cb(**kwargs)]
             elif callback_type == FUNDING:
-                # cb[FUNDING] = [funding_cb(**kwargs)]
-                cb[FUNDING] = [funding_cb(key=topic_key, **kwargs)]
+                cb[FUNDING] = [funding_cb(**kwargs)]
             elif callback_type == TICKER:
-                # to use topic_key @logan
-                # cb[TICKER] = [ticker_cb(**kwargs)]
-                # cb[TICKER] = [ticker_cb(key='logan2-ticker', **kwargs)]
-                cb[TICKER] = [ticker_cb(key=topic_key, **kwargs)]
+                cb[TICKER] = [ticker_cb(**kwargs)]
             elif callback_type == L2_BOOK:
-                # to use topic_key @logan
-                # cb[L2_BOOK] = [book_cb(key=L2_BOOK, **kwargs)]
-                cb[L2_BOOK] = [book_cb(key=topic_key, **kwargs)]
+                cb[L2_BOOK] = [book_cb(key=L2_BOOK, **kwargs)]
                 if book_up:
                     cb[BOOK_DELTA] = [book_up(key=L2_BOOK, **kwargs)]
             elif callback_type == L3_BOOK:
@@ -107,11 +115,9 @@ class Collector(Process):
                 if book_up:
                     cb[BOOK_DELTA] = [book_up(key=L3_BOOK, **kwargs)]
             elif callback_type == OPEN_INTEREST:
-                # cb[OPEN_INTEREST] = [oi_cb(**kwargs)]
-                cb[OPEN_INTEREST] = [oi_cb(key=topic_key, **kwargs)]
+                cb[OPEN_INTEREST] = [oi_cb(**kwargs)]
             elif callback_type == CANDLES:
-                # cb[CANDLES] = [candles_cb(**kwargs)]
-                cb[CANDLES] = [candles_cb(key=topic_key, **kwargs)]
+                cb[CANDLES] = [candles_cb(**kwargs)]
 
             if 'pass_through' in self.config:
                 if self.config['pass_through']['type'] == 'zmq':
@@ -138,6 +144,7 @@ class Collector(Process):
                     if BOOK_DELTA in cb:
                         cb[BOOK_DELTA].append(BookDeltaZMQ(host=host, port=port))
 
-            fh.add_feed(self.exchange, subscription={callback_type: self.exchange_config[callback_type]}, callbacks=cb, **fh_kwargs)
+            fh.add_feed(self.exchange, subscription={callback_type: self.exchange_config[callback_type]}, callbacks=cb, **feed_kwargs)
+            LOG.info(f"Collector added feed handler - {self.exchange}({callback_type.upper()}, {({'book_delta': book_delta, **feed_kwargs})})")
 
         fh.run()

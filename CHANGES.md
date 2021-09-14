@@ -1,6 +1,11 @@
 ## Changelog
 
-### 0.3.2
+### 0.4.0
+  * Feature: Support for Coingecko aggregated data per coin, to be used with a new data channel 'market_info'
+  * Feature: Config.yaml supports individual exchange's Feed class params. 
+  * Feature: Support for 'http_proxy' in exchanges config. 
+
+### 0.3.2 (2021-04-25)
   * Bugfix: Fix book building example
   * Feature: Ability to pull config file from S3 bucket instead of local filesystem, polling for updated config is supported.
   * Feature: Updated to work with latest version of cryptofeed
@@ -12,6 +17,7 @@
   * Bugfix: rename kafka host kwarg to bootstrap, as cryptofeed backend expects
   * Feature: Candles support
   * Bugfix: Fix l2/l3_book_flatten routines
+  * Feature: Update to work with latest cryptofeed version/changes. Update InfuxDB backend to work with 2.x. Drop support for InfluxDB 1.x
 
 ### 0.3.1 (2020-11-14)
   * Feature: Influxdb 1.x authentication support

@@ -12,8 +12,8 @@ cache: kafka
 kafka:
     # ip/port are for the bootstrap server
     ip: '127.0.0.1'
-    topic_key: 'logan.test02-'
     port: 9092
+    topic_key: 'logan.test02-'
     start_flush: true
 redis:
     ip: '127.0.0.1'
@@ -27,11 +27,14 @@ redis:
 # must be capitalized) and only exchanges supported by cryptofeed are supported.
 # Data types follow cryptofeed definitions, see defines.py in cryptofeed for more details, common ones are
 # trades, l2_book, l3_book, funding, ticker, and open_interest
+#
 # Trading symbols for most exchanges follow the currency-quote format. Information about what an exchange supports (symbols, data types, etc)
 # can be found via the info() merhod available on all cryptofeed exchange clases.
 #
+# Universal feed options:
 # max_depth controls the size of the book to return. The top N levels will be returned, only when those N levels
 # have changed.
+#
 # book_delta enables book deltas (snapshot, then only deltas are delivered). Snapshops are delivered
 # every book_interval updates. book_interval defaults to 1000 if not specified
 #
@@ -44,46 +47,39 @@ redis:
 # snapshot_interval controls how often to deliver snapshots on NON delta feeds. Book updates between the snapshots are discarded.
 # In other words, enabling snapshot_interval and setting it to a value (say 1000) will cause every 1000th book update to be stored (the full book). Other
 # updates will be dropped. Can also set up book_depth with snapshot_interval enabled.
+#
+# http_proxy: URL to proxy GET requests. Only used for collecting http data from the exchanges.
+#
+# Some exchange's have unique config options found in cryptofeed.exchange.*
+# i.e. only Binance's L2_BOOK has 'depth_interval', applying it to other exchange's L2_BOOK will be ignored.
 
 exchanges:
-    # BITMEX:
-    #     channel_timeouts:
-    #         l2_book: 30
-    #         trades: 120
-    #         ticker: 120
-    #         funding: -1
-    #     retries: -1
-    #     l2_book:
-    #         symbols: [BTC-USD]
-    #         max_depth: 10
-    #         book_delta: false
-    #         book_interval: 100000
-    #     trades: [BTC-USD]
-    #     ticker: [BTC-USD]
-    #     funding: [BTC-USD]
-    BINANCE_DELIVERY:
+    BITMEX:
         channel_timeouts:
             l2_book: 30
             trades: 120
             ticker: 120
             funding: -1
         retries: -1
+
         l2_book:
-            symbols: [BTC-USD_PERP]
+            symbols: [BTC-USD]
             max_depth: 10
-            book_delta: false
+            book_delta: true
+            depth_interval: 1000ms
             book_interval: 100000
-        trades: [BTC-USD_PERP]
-        ticker: [BTC-USD_PERP]
-        funding: [BTC-USD_PERP]
-    # COINBASE:
-    #     retries: -1
-    #     l3_book:
-    #         symbols: [BTC-USD]
-    #         book_delta: true
-    #         book_interval: 100000
-    #     trades: [BTC-USD, ETH-USD, ETH-BTC]
-    #     ticker: [BTC-USD]
+        trades: [BTC-USD]
+        ticker: [BTC-USD]
+        funding: [BTC-USD]
+
+    COINBASE:
+        retries: -1
+        l3_book:
+            symbols: [BTC-USD]
+            book_delta: true
+            book_interval: 100000
+        trades: [BTC-USD, ETH-USD, ETH-BTC]
+        ticker: [BTC-USD]
 
 # Where to store the data. Currently arctic, influx, elastic, and parquet are supported. More than one can be enabled
 # storage: [arctic, influx]
@@ -108,12 +104,12 @@ elastic:
     replicas: 0
     refresh_interval: '30s'
 
+# Cryptostore only works with InfluxDB 2.x
 influx:
     host: 'http://127.0.0.1:8086'
-    db: example
-    create: true
-    username: None
-    password: None
+    bucket: None
+    org: None
+    token: None
 
 # Parquet specific options. Parquet will default to storing the data on disk unless these are specified
 parquet:
@@ -192,11 +188,11 @@ storage_interval: 60
 #
 
 # Cryptostore Plugin Interface
-plugins:
-    restfeed:
-        module: [cryptostore.plugin.restfeed, Restfeed]
-        config: config.yaml
-        # config: config-restfeed.yaml
+#plugins:
+    # restfeed:
+    #     module: [cryptofeed.plugin.restfeed, Restfeed]
+    #     config: config.yaml
+    #     config: config-restfeed.yaml
 #    backfill:
         # The import path, and class name
         # from cryptostore.plugin.backfill import Backfill
@@ -211,6 +207,6 @@ plugins:
 #    COINBASE:
 #        BTC-USD:
 #            start: '2017-01-01'
-restfeed:
-    BINANCE_DELIVERY:
-        orders: [BTC-USD_PERP]
+# restfeed:
+#     BINANCE_DELIVERY:
+#         orders: [BTC-USD_PERP]
