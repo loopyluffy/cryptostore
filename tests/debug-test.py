@@ -13,8 +13,8 @@ cryptofeed_dir_path = repo_dir_path + '/cryptofeed@loopyluffy'
 sys.path.append(cryptofeed_dir_path)
 
 # to import pyx file
-# import pyximport
-# pyximport.install()
+import pyximport
+pyximport.install()
 
 # use UTC time zone @weaver
 os.environ['TZ'] = 'UTC'

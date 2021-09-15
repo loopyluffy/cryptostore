@@ -63,23 +63,23 @@ exchanges:
         retries: -1
 
         l2_book:
-            symbols: [BTC-USD]
+            symbols: [BTC-USD-PERP]
             max_depth: 10
             book_delta: true
             depth_interval: 1000ms
             book_interval: 100000
-        trades: [BTC-USD]
-        ticker: [BTC-USD]
-        funding: [BTC-USD]
+        trades: [BTC-USD-PERP]
+        ticker: [BTC-USD-PERP]
+        funding: [BTC-USD-PERP]
 
-    COINBASE:
-        retries: -1
-        l3_book:
-            symbols: [BTC-USD]
-            book_delta: true
-            book_interval: 100000
-        trades: [BTC-USD, ETH-USD, ETH-BTC]
-        ticker: [BTC-USD]
+    # COINBASE:
+    #     retries: -1
+    #     l3_book:
+    #         symbols: [BTC-USD]
+    #         book_delta: true
+    #         book_interval: 100000
+    #     trades: [BTC-USD, ETH-USD, ETH-BTC]
+    #     ticker: [BTC-USD]
 
 # Where to store the data. Currently arctic, influx, elastic, and parquet are supported. More than one can be enabled
 # storage: [arctic, influx]
@@ -90,10 +90,10 @@ storage_retry_wait: 30
 
 # Configurable passthrough for data - data will be sent in realtime (no aggregation in redis).
 # To disable, remove
-pass_through:
-    type: zmq
-    host: '127.0.0.1'
-    port: 5678
+# pass_through:
+#     type: zmq
+#     host: '127.0.0.1'
+#     port: 5678
 
 
 elastic:
