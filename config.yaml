@@ -11,9 +11,10 @@ cache: kafka
 
 kafka:
     # ip/port are for the bootstrap server
-    ip: '127.0.0.1'
+    # ip: '127.0.0.1'
+    ip: '1.234.23.41' 
     port: 9092
-    topic_key: 'logan.test02-'
+    topic_key: 'logan.test01-'
     start_flush: true
 redis:
     ip: '127.0.0.1'
@@ -54,7 +55,7 @@ redis:
 # i.e. only Binance's L2_BOOK has 'depth_interval', applying it to other exchange's L2_BOOK will be ignored.
 
 exchanges:
-    BITMEX:
+    BINANCE_FUTURES:
         channel_timeouts:
             l2_book: 30
             trades: 120
@@ -62,15 +63,45 @@ exchanges:
             funding: -1
         retries: -1
 
-        l2_book:
-            symbols: [BTC-USD-PERP]
-            max_depth: 10
-            book_delta: true
-            depth_interval: 1000ms
-            book_interval: 100000
-        trades: [BTC-USD-PERP]
-        ticker: [BTC-USD-PERP]
-        funding: [BTC-USD-PERP]
+        # l2_book:
+        #     symbols: [BTC-USDT-PERP]
+        #     max_depth: 10
+        #     book_delta: true
+        #     depth_interval: 1000ms
+        #     book_interval: 100000
+        # trades: [BTC-USDT-PERP]
+        ticker: [BTC-USDT-PERP]
+        funding: [BTC-USDT-PERP]
+        # positions: [BTC-USDT-PERP]
+        # order_info: [BTC-USDT-PERP] 
+
+    # BYBIT:
+    #     retries: -1
+    #     l3_book:
+    #         symbols: [BTC-USD]
+    #         book_delta: true
+    #         book_interval: 100000
+    #     trades: [BTC-USD, ETH-USD, ETH-BTC]
+    #     ticker: [BTC-USDT-PERP]
+    #     order_info: [SOL-USDT-PERP] 
+
+    # BITMEX:
+    #     channel_timeouts:
+    #         l2_book: 30
+    #         trades: 120
+    #         ticker: 120
+    #         funding: -1
+    #     retries: -1
+
+    #     l2_book:
+    #         symbols: [BTC-USD-PERP]
+    #         max_depth: 10
+    #         book_delta: true
+    #         depth_interval: 1000ms
+    #         book_interval: 100000
+    #     trades: [BTC-USD-PERP]
+    #     ticker: [BTC-USD-PERP]
+    #     funding: [BTC-USD-PERP]
 
     # COINBASE:
     #     retries: -1
@@ -80,6 +111,13 @@ exchanges:
     #         book_interval: 100000
     #     trades: [BTC-USD, ETH-USD, ETH-BTC]
     #     ticker: [BTC-USD]
+
+# binance_futures:
+#     key_id: 
+#     key_secret: 
+# binance_delivery:
+#     key_id: null
+#     key_secret: null
 
 # Where to store the data. Currently arctic, influx, elastic, and parquet are supported. More than one can be enabled
 # storage: [arctic, influx]

@@ -10,7 +10,7 @@ import os
 from multiprocessing import Process
 
 from cryptofeed import FeedHandler
-from cryptofeed.defines import TRADES, L2_BOOK, L3_BOOK, TICKER, FUNDING, OPEN_INTEREST, LIQUIDATIONS, CANDLES
+from cryptofeed.defines import TRADES, L2_BOOK, L3_BOOK, TICKER, FUNDING, OPEN_INTEREST, LIQUIDATIONS, CANDLES, POSITIONS
 from cryptofeed.exchanges import EXCHANGE_MAP
 
 LOG = logging.getLogger('cryptostore')
@@ -56,6 +56,10 @@ class Collector(Process):
         http_proxy = self.exchange_config.pop('http_proxy', None)
         fh = FeedHandler()
 
+        # topic key setting @logan
+        topic_key = self.config['kafka']['topic_key']
+        # topic_key = topic_key.lower() 
+
         for callback_type, feed_config in self.exchange_config.items():
             # config value can be a dict or list of symbols
             feed_kwargs = {'retries': retries, 'timeout': timeouts.get(callback_type, 120)}
@@ -97,21 +101,36 @@ class Collector(Process):
                 kwargs = {'bootstrap': self.config['kafka']['ip'], 'port': self.config['kafka']['port']}
 
             if callback_type == TRADES:
-                cb[TRADES] = [trade_cb(**kwargs)]
+                # to use topic_key @logan 
+                # cb[TRADES] = [trade_cb(**kwargs)]
+                # cb[TRADES] = [trade_cb(key='logan-trades', **kwargs)]
+                cb[TRADES] = [trade_cb(key=topic_key+TRADES, **kwargs)]
+                # non normalized data callback added @logan
+                # cb[TRADES_RAW] = [trade_raw_cb(key=topic_key, **kwargs)]
             elif callback_type == LIQUIDATIONS:
-                cb[LIQUIDATIONS] = [liq_cb(**kwargs)]
+                # cb[LIQUIDATIONS] = [liq_cb(**kwargs)]
+                cb[LIQUIDATIONS] = [liq_cb(key=topic_key+LIQUIDATIONS, **kwargs)]
             elif callback_type == FUNDING:
-                cb[FUNDING] = [funding_cb(**kwargs)]
+                # cb[FUNDING] = [funding_cb(**kwargs)]
+                cb[FUNDING] = [funding_cb(key=topic_key+FUNDING, **kwargs)]
             elif callback_type == TICKER:
-                cb[TICKER] = [ticker_cb(**kwargs)]
+                # cb[TICKER] = [ticker_cb(**kwargs)]
+                cb[TICKER] = [ticker_cb(key=topic_key+TICKER, **kwargs)]
             elif callback_type == L2_BOOK:
-                cb[L2_BOOK] = [book_cb(key=L2_BOOK, **kwargs)]
+                # cb[L2_BOOK] = [book_cb(key=L2_BOOK, **kwargs)]
+                cb[L2_BOOK] = [book_cb(key=topic_key+L2_BOOK, **kwargs)]
             elif callback_type == L3_BOOK:
-                cb[L3_BOOK] = [book_cb(key=L3_BOOK, **kwargs)]
+                # cb[L3_BOOK] = [book_cb(key=L3_BOOK, **kwargs)]
+                cb[L3_BOOK] = [book_cb(key=topic_key+L3_BOOK, **kwargs)]
             elif callback_type == OPEN_INTEREST:
-                cb[OPEN_INTEREST] = [oi_cb(**kwargs)]
+                # cb[OPEN_INTEREST] = [oi_cb(**kwargs)]
+                cb[OPEN_INTEREST] = [oi_cb(key=topic_key+OPEN_INTEREST, **kwargs)]
             elif callback_type == CANDLES:
-                cb[CANDLES] = [candles_cb(**kwargs)]
+                # cb[CANDLES] = [candles_cb(**kwargs)]
+                cb[CANDLES] = [candles_cb(key=topic_key+CANDLES, **kwargs)]
+            # elif callback_type == POSITIONS:
+                # cb[CANDLES] = [candles_cb(**kwargs)]
+                # cb[CANDLES] = [candles_cb(key=topic_key+CANDLES, **kwargs)]
 
             if 'pass_through' in self.config:
                 if self.config['pass_through']['type'] == 'zmq':
