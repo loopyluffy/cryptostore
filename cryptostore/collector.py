@@ -10,7 +10,7 @@ import os
 from multiprocessing import Process
 
 from cryptofeed import FeedHandler
-from cryptofeed.defines import TRADES, L2_BOOK, L3_BOOK, TICKER, FUNDING, OPEN_INTEREST, LIQUIDATIONS, CANDLES, POSITIONS
+from cryptofeed.defines import TRADES, L2_BOOK, L3_BOOK, TICKER, FUNDING, OPEN_INTEREST, LIQUIDATIONS, CANDLES, BALANCES, POSITIONS, ACCOUNT_CONFIG, ORDER_INFO
 from cryptofeed.exchanges import EXCHANGE_MAP
 
 LOG = logging.getLogger('cryptostore')
@@ -54,7 +54,11 @@ class Collector(Process):
         retries = self.exchange_config.pop('retries', 30)
         timeouts = self.exchange_config.pop('channel_timeouts', {})
         http_proxy = self.exchange_config.pop('http_proxy', None)
-        fh = FeedHandler()
+
+        # to deliver private key config... @logan
+        # fh = FeedHandler()
+        path_to_config = 'sandbox/strategy_config.yaml'
+        fh = FeedHandler(config=path_to_config)
 
         # topic key setting @logan
         topic_key = self.config['kafka']['topic_key']
@@ -87,7 +91,8 @@ class Collector(Process):
                 liq_cb = LiquidationsStream
                 candles_cb = CandlesStream
             elif cache == 'kafka':
-                from cryptofeed.backends.kafka import TradeKafka, BookKafka, TickerKafka, FundingKafka, OpenInterestKafka, LiquidationsKafka, CandlesKafka
+                # added user data callbacks @logan
+                from cryptofeed.backends.kafka import TradeKafka, BookKafka, TickerKafka, FundingKafka, OpenInterestKafka, LiquidationsKafka, CandlesKafka, BalancesKafka, PositionsKafka, AccountConfigKafka, OrderInfoKafka
                 trade_cb = TradeKafka
                 book_cb = BookKafka
                 ticker_cb = TickerKafka
@@ -95,6 +100,13 @@ class Collector(Process):
                 oi_cb = OpenInterestKafka
                 liq_cb = LiquidationsKafka
                 candles_cb = CandlesKafka
+
+                # added user data callbacks @logan
+                balances_cb = BalancesKafka 
+                positions_cb = PositionsKafka
+                account_config_cb = AccountConfigKafka
+                order_info_cb = OrderInfoKafka 
+
                 kwargs = {'bootstrap': self.config['kafka']['ip'], 'port': self.config['kafka']['port']}
 
             if callback_type == TRADES:
@@ -125,9 +137,14 @@ class Collector(Process):
             elif callback_type == CANDLES:
                 # cb[CANDLES] = [candles_cb(**kwargs)]
                 cb[CANDLES] = [candles_cb(key=topic_key+CANDLES, **kwargs)]
-            # elif callback_type == POSITIONS:
-                # cb[CANDLES] = [candles_cb(**kwargs)]
-                # cb[CANDLES] = [candles_cb(key=topic_key+CANDLES, **kwargs)]
+            # callback setting for only binance user data stream... @logan
+            elif callback_type == BALANCES:
+                cb[BALANCES] = [balances_cb(key=topic_key+BALANCES, **kwargs)]
+                 
+                if self.exchange == 'BINANCE_FUTURES' or self.exchange == 'BINANCE_DELIVERY':
+                    cb[POSITIONS] = [positions_cb(key=topic_key+POSITIONS, **kwargs)]
+                    cb[ACCOUNT_CONFIG] = [account_config_cb(key=topic_key+ACCOUNT_CONFIG, **kwargs)]
+                    cb[ORDER_INFO] = [order_info_cb(key=topic_key+ORDER_INFO, **kwargs)]
 
             if 'pass_through' in self.config:
                 if self.config['pass_through']['type'] == 'zmq':

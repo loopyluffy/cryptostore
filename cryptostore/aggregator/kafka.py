@@ -7,7 +7,7 @@ associated with this software.
 import json
 import logging
 
-from cryptofeed.defines import L2_BOOK, L3_BOOK, TRADES, TICKER, FUNDING, OPEN_INTEREST
+from cryptofeed.defines import L2_BOOK, L3_BOOK, TRADES, TICKER, FUNDING, OPEN_INTEREST, BALANCES, POSITIONS, ORDER_INFO
 
 from cryptostore.engines import StorageEngines
 from cryptostore.aggregator.cache import Cache
@@ -91,3 +91,68 @@ class Kafka(Cache):
         LOG.info("%s: Committing offset %d", key, self.ids[key].offset())
         self._conn(key).commit(message=self.ids[key])
         self.ids[key] = None
+
+
+class LoopyKafka(Kafka):
+    def _conn(self, key):
+        if key not in self.conn:
+            self.ids[key] = None
+            kafka = StorageEngines.confluent_kafka
+            self.conn[key] = kafka.Consumer({'bootstrap.servers': f"{self.ip}:{self.port}",
+                                             'client.id': f'simple_strategy-{key}',
+                                             'enable.auto.commit': False,
+                                             'group.id': f'loopyluffy-{key}',
+                                             'max.poll.interval.ms': 3000000,
+                                            #  to read the message from latest @logan
+                                             "auto.offset.reset" : "latest"})
+            self.conn[key].subscribe([key])
+        return self.conn[key]
+
+    def read(self, topic_key, exchange, feed, start=None, end=None):
+        kafka = StorageEngines.confluent_kafka
+        key = f'{topic_key}{feed}-{exchange}'.lower()
+
+        if start and end:
+            start_offset = self._conn(key).offsets_for_times([kafka.TopicPartition(key, 0, start)])[0]
+            stop_offset = self._conn(key).offsets_for_times([kafka.TopicPartition(key, 0, end)])[0]
+            if start_offset.offset == -1:
+                return []
+
+            self._conn(key).assign([start_offset])
+            offset_diff = stop_offset.offset - start_offset.offset
+            if offset_diff <= 0:
+                return []
+
+            data = self._conn(key).consume(offset_diff)
+            self._conn(key).unassign()
+        else:
+            data = self._conn(key).consume(1000000, timeout=0.5)
+
+        if len(data) > 0:
+            LOG.info("%s: Read %d messages from Kafka", key, len(data))
+            
+        ret = []
+
+        for message in data:
+            self.ids[key] = message
+            msg = message.value().decode('utf8')
+            try:
+                update = json.loads(msg)
+            except Exception:
+                if 'Subscribed topic not available' in msg:
+                    return ret
+            if feed in {L2_BOOK, L3_BOOK}:
+                update = book_flatten(update, update['timestamp'], update['delta'], update['receipt_timestamp'])
+                ret.extend(update)
+            if feed in {TRADES, TICKER, FUNDING, OPEN_INTEREST, BALANCES, POSITIONS, ORDER_INFO}:
+                ret.append(update)
+
+        return ret
+
+    def delete(self, topic_key, exchange, feed):
+        key = f'{topic_key}{feed}-{exchange}'.lower()
+        LOG.info("%s: Committing offset %d", key, self.ids[key].offset())
+        self._conn(key).commit(message=self.ids[key])
+        self.ids[key] = None
+
+    

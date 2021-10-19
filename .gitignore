@@ -107,6 +107,7 @@ venv.bak/
 
 # private
 sandbox/
+strategy/
 
 # PyCharm / jetbrains
 .idea

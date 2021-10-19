@@ -13,9 +13,10 @@ kafka:
     # ip/port are for the bootstrap server
     # ip: '127.0.0.1'
     ip: '1.234.23.41' 
+    # ip: 'loopyquant01.cafe24.com' 
     port: 9092
     topic_key: 'logan.test01-'
-    start_flush: true
+    start_flush: false
 redis:
     ip: '127.0.0.1'
     port: 6379
@@ -67,9 +68,10 @@ exchanges:
         #     book_delta: true
         #     depth_interval: 1000ms
         #     book_interval: 100000
-        # trades: [BTC-USDT-PERP]
+        trades: [BTC-USDT-PERP]
         ticker: [BTC-USDT-PERP]
         funding: [BTC-USDT-PERP]
+        balances: []
         # positions: [BTC-USDT-PERP]
         # order_info: [BTC-USDT-PERP] 
 
@@ -126,13 +128,6 @@ exchanges:
     #         book_interval: 100000
     #     trades: [BTC-USD, ETH-USD, ETH-BTC]
     #     ticker: [BTC-USD]
-
-# binance_futures:
-#     key_id: 
-#     key_secret: 
-# binance_delivery:
-#     key_id: null
-#     key_secret: null
 
 # Where to store the data. Currently arctic, influx, elastic, and parquet are supported. More than one can be enabled
 # storage: [arctic, influx]
@@ -242,7 +237,10 @@ storage_interval: 10
 #
 
 # Cryptostore Plugin Interface
-#plugins:
+plugins:
+    simple_strategy:
+        module: [cryptostore.strategy.simple_strategy, SimpleStrategy]
+        config: sandbox/strategy_config.yaml 
     # restfeed:
     #     module: [cryptofeed.plugin.restfeed, Restfeed]
     #     config: config.yaml
