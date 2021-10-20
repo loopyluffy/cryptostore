@@ -14,8 +14,10 @@ kafka:
     # ip: '127.0.0.1'
     ip: '1.234.23.41' 
     # ip: 'loopyquant01.cafe24.com' 
+    # ip: 'broker'
     port: 9092
     topic_key: 'logan.test01-'
+    # topic_key: 'loopyquant01.01-'
     start_flush: false
 redis:
     ip: '127.0.0.1'
@@ -239,7 +241,7 @@ storage_interval: 10
 # Cryptostore Plugin Interface
 plugins:
     simple_strategy:
-        module: [cryptostore.strategy.simple_strategy, SimpleStrategy]
+        module: [cryptostore.strategy.grid_protection_strategy, GridProtectionStrategy]
         config: sandbox/strategy_config.yaml 
     # restfeed:
     #     module: [cryptofeed.plugin.restfeed, Restfeed]

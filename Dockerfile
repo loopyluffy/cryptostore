@@ -10,7 +10,8 @@ COPY cryptostore /cryptostore
 
 RUN apt install gcc git
 
-RUN pip install --no-cache-dir git+https://github.com/bmoscon/cryptofeed.git
+RUN pip install --no-cache-dir git+https://github.com/loopyluffy/cryptofeed.git
+# RUN pip install --no-cache-dir git+https://github.com/bmoscon/cryptofeed.git
 RUN pip install --no-cache-dir cython
 RUN pip install --no-cache-dir pyarrow
 RUN pip install --no-cache-dir redis
