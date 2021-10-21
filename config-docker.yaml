@@ -1,29 +1,30 @@
-# Cryptostore sample config file for Docker
 
-cache: redis
 
+
+cache: kafka
+
+kafka:
+    ip: 'broker'
+    port: 29092
+    topic_key: 'loopyquant01.01-'
+    start_flush: false
 redis:
-    ip: redisdb
+    ip: '127.0.0.1'
     port: 6379
-    del_after_read: true
-    start_flush: true
     socket: null
+    del_after_read: true
+    retention_time: null
+    start_flush: true
 
 exchanges:
-    BITMEX:
-        l2_book:
-            symbols: [XBTUSD]
-            max_depth: 10
-        trades: [XBTUSD]
-    COINBASE:
-        l3_book:
-            symbols: [BTC-USD, ETH-USD]
-            snapshot_interval: 10000
-        trades: [BTC-USD, ETH-USD, ETH-BTC]
+    BINANCE_FUTURES:
+        trades: [BTC-USDT-PERP]
+        ticker: [BTC-USDT-PERP]
+        funding: [BTC-USDT-PERP]
+        balances: []
 
-storage: [arctic]
-arctic: mongodb://mongo:27017
-
-storage_interval: 60
-storage_retries: 5
-storage_retry_wait: 30
+# Cryptostore Plugin Interface
+plugins:
+    simple_strategy:
+        module: [cryptostore.strategy.grid_protection_strategy, GridProtectionStrategy]
+        config: sandbox/strategy_config.yaml 

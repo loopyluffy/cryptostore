@@ -35,7 +35,7 @@ setup(
     ],
     install_requires=[
         "pandas",
-        "cryptofeed>=2.0.0",
+        # "cryptofeed>=2.0.0",
         "pyyaml",
         "pyarrow",
         "aiohttp>=3.7.1, < 4.0.0"
@@ -47,7 +47,8 @@ setup(
         'gcs': ['google-cloud-storage'],
         'aws': ['boto3'],
         'zmq': ['pyzmq'],
-        "drive": ["google-auth", "google-api-python-client"]
+        'drive': ['google-auth', 'google-api-python-client'],
+        'telegram': ['python-telegram-bot']
     },
     entry_points={
         'console_scripts': ['cryptostore=cryptostore.bin.cryptostore:main'],

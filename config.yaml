@@ -13,10 +13,11 @@ kafka:
     # ip/port are for the bootstrap server
     # ip: '127.0.0.1'
     ip: '1.234.23.41' 
-    # ip: 'loopyquant01.cafe24.com' 
-    # ip: 'broker'
-    port: 9092
+    # ip: 'loopyquant01.cafe24.com'
+    port: 9092 
     topic_key: 'logan.test01-'
+    # ip: 'broker'
+    # port: 29092
     # topic_key: 'loopyquant01.01-'
     start_flush: false
 redis:
