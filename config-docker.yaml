@@ -18,9 +18,9 @@ redis:
 
 exchanges:
     BINANCE_FUTURES:
-        trades: [BTC-USDT-PERP]
-        ticker: [BTC-USDT-PERP]
-        funding: [BTC-USDT-PERP]
+        # trades: [BTC-USDT-PERP]
+        # ticker: [BTC-USDT-PERP]
+        funding: [BTC-USDT-PERP, ETH-USDT-PERP]
         balances: []
 
 # Cryptostore Plugin Interface

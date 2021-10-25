@@ -11,6 +11,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    # if loopyluffy_default network exists... if not delete this setting... @logan
+    # networks:
+    #   - loopyluffy_default
+
   # redisdb:
   #   logging:
   #     driver: "json-file"
@@ -33,3 +37,8 @@ services:
   #     - '37017:27017'
   #   expose:
   #     - 27017
+
+  # if external docker network exists... if not delete this setting... @logan
+  # networks:
+  #   loopyluffy_default:
+  #     external: true

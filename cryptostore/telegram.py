@@ -14,7 +14,7 @@ class TelegramBot:
         self.updater = Updater(token=token)
         self.chat_id = chat_id
 
-    def sendMessage(self, text):
+    def send_message(self, text):
         self.updater.bot.sendMessage(chat_id=self.chat_id, text=text)
 
     def stop(self):
