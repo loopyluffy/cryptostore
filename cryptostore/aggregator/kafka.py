@@ -106,27 +106,51 @@ class LoopyKafka(Kafka):
                                             #  to read the message from latest @logan
                                              "auto.offset.reset" : "latest"})
             self.conn[key].subscribe([key])
+            # to offset latest... @logan
+            # self.conn[key].subscribe([key], on_assign=seek_to_end)
+            # last_offset = self.conn[key].end_offsets([kafka.TopicPartition(key, 0)])[0]
+            # self.conn[key].seek_to_end([kafka.TopicPartition(key, 0)])
+            # last_offset -= 1
+            # LOG.info(f'last_offset: {last_offset}')
+            # self._conn(key).commit(last_offset)
+
         return self.conn[key]
+
+    def reset_latest(self, topic_key, exchange, feed):
+        kafka = StorageEngines.confluent_kafka
+        key = f'{topic_key}{feed}-{exchange}'.lower()
+
+        partitions = self._conn(key).committed([kafka.TopicPartition(key, 0)])
+        start_offset = partitions[0].offset
+        first_offset, stop_offset = self._conn(key).get_watermark_offsets(kafka.TopicPartition(key, 0))
+        LOG.info(f'topic: {key}, current_offset: {start_offset}, latest_offset:{stop_offset}')
+        if start_offset == -1:
+            return 
+
+        offset_diff = stop_offset - start_offset
+        LOG.info(f'topic: {key}, offset_diff: {offset_diff}')
+        if offset_diff <= 0:
+            return 
+
+        self._conn(key).assign(partitions)
+        data = self._conn(key).consume(offset_diff, timeout=0.5)
+        if len(data) > 0:
+            LOG.info("%s: Read %d messages from Kafka", key, len(data))
+        else:
+            LOG.info('why?...???')
+            return
+
+        for message in data:
+            self.ids[key] = message
+        LOG.info("%s: Committing offset %d", key, self.ids[key].offset())
+        self._conn(key).commit(message=self.ids[key])
+        self.ids[key] = None
 
     def read(self, topic_key, exchange, feed, start=None, end=None):
         kafka = StorageEngines.confluent_kafka
         key = f'{topic_key}{feed}-{exchange}'.lower()
 
-        if start and end:
-            start_offset = self._conn(key).offsets_for_times([kafka.TopicPartition(key, 0, start)])[0]
-            stop_offset = self._conn(key).offsets_for_times([kafka.TopicPartition(key, 0, end)])[0]
-            if start_offset.offset == -1:
-                return []
-
-            self._conn(key).assign([start_offset])
-            offset_diff = stop_offset.offset - start_offset.offset
-            if offset_diff <= 0:
-                return []
-
-            data = self._conn(key).consume(offset_diff)
-            self._conn(key).unassign()
-        else:
-            data = self._conn(key).consume(1000000, timeout=0.5)
+        data = self._conn(key).consume(1000000, timeout=0.5)
 
         if len(data) > 0:
             LOG.info("%s: Read %d messages from Kafka", key, len(data))
