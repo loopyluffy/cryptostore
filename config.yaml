@@ -71,9 +71,9 @@ exchanges:
         #     book_delta: true
         #     depth_interval: 1000ms
         #     book_interval: 100000
-        trades: [BTC-USDT-PERP]
-        ticker: [BTC-USDT-PERP]
-        funding: [BTC-USDT-PERP]
+        # trades: [BTC-USDT-PERP]
+        # ticker: [BTC-USDT-PERP]
+        funding: [BTC-USDT-PERP, ETH-USDT-PERP]
         balances: []
         # positions: [BTC-USDT-PERP]
         # order_info: [BTC-USDT-PERP] 

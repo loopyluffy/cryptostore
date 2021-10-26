@@ -11,6 +11,9 @@ COPY sandbox /sandbox
 
 
 RUN apt install gcc git
+# to use vim... @logan
+RUN apt-get update
+RUN apt-get install -y vim
 
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir git+https://github.com/loopyluffy/cryptofeed.git
