@@ -48,7 +48,8 @@ setup(
         'aws': ['boto3'],
         'zmq': ['pyzmq'],
         'drive': ['google-auth', 'google-api-python-client'],
-        'telegram': ['python-telegram-bot']
+        'telegram': ['python-telegram-bot'],
+        'loopyquant':['aiokafka', 'confluent-kafka', 'python-telegram-bot']
     },
     entry_points={
         'console_scripts': ['cryptostore=cryptostore.bin.cryptostore:main'],

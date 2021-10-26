@@ -28,6 +28,6 @@ RUN pip install --no-cache-dir cython
 ## Add any extra dependencies you might have
 # eg RUN pip install --no-cache-dir boto3
 
-RUN pip install -e .[kafka, telegram]
+RUN pip install -e .[loopyquant]
 
 ENTRYPOINT [ "cryptostore" ]
