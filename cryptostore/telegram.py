@@ -173,6 +173,16 @@ class AccountBot(TelegramBot):
             else:
                 query.edit_message_text("No symbol for orders... See you next time!")
                 return ConversationHandler.END 
+        elif option == 'grids':
+            if len(self.symbols) > 0:
+                keyboard = [[InlineKeyboardButton(symbol, callback_data=f"{exchange}.{symbol}.{option}")] for symbol in self.symbols]
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                # Send message with text and appended InlineKeyboard
+                query.edit_message_text(f"Selected exchange: {exchange}, Choose a symbol of grids", reply_markup=reply_markup)
+                return THIRD
+            else:
+                query.edit_message_text("No symbol for grids... See you next time!")
+                return ConversationHandler.END 
 
         self.command_handler(exchange, option, update, context)
 
