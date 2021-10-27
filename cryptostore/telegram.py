@@ -20,7 +20,7 @@ from cryptofeed.defines import (
 LOG = logging.getLogger('cryptostore')
 
 # Stages
-FIRST, SECOND = range(2)
+FIRST, SECOND, THIRD = range(3)
 
 class TelegramBot:
     def __init__(self, token, chat_id):
@@ -60,15 +60,17 @@ class AccountBot(TelegramBot):
         super().__init__(token, chat_id)
 
         self.exchanges = []
+        self.symbols = []
         self.options = []
-        # command_handler(exchange, option, update, context)
+        # command_handler(exchange, option, update, context, symbol=None)
         self.command_handler = None
 
-    def add_command(self, exchanges: list, options: list, cmd: str, func, run_async=False):
+    def add_command(self, exchanges: list, symbols: list, options: list, cmd: str, func, run_async=False):
         # assert isinstance(exchanges, list)
         # assert isinstance(options, list)
 
         self.exchanges = exchanges 
+        self.symbols = symbols
         self.options = options
         self.command_handler = func 
 
@@ -79,7 +81,10 @@ class AccountBot(TelegramBot):
                     CallbackQueryHandler(self.option),
                 ],
                 SECOND: [
-                    CallbackQueryHandler(self.conv_end),
+                    CallbackQueryHandler(self.second_conv_end),
+                ],
+                THIRD: [
+                    CallbackQueryHandler(self.third_conv_end),
                 ],
             },
             fallbacks=[CommandHandler('account', self.account)],
@@ -115,7 +120,7 @@ class AccountBot(TelegramBot):
             return ConversationHandler.END
 
         
-    def option(self, update: Update, context: CallbackContext) -> None:
+    def option(self, update: Update, context: CallbackContext) -> int:
         """Parses the CallbackQuery and updates the message text."""
         query = update.callback_query
 
@@ -146,7 +151,7 @@ class AccountBot(TelegramBot):
             query.edit_message_text("No exchange options... See you next time!")
             return ConversationHandler.END
 
-    def conv_end(self, update: Update, context: CallbackContext) -> int:
+    def second_conv_end(self, update: Update, context: CallbackContext) -> int:
         """Returns `ConversationHandler.END`, which tells the
         ConversationHandler that the conversation is over.
         """
@@ -158,7 +163,36 @@ class AccountBot(TelegramBot):
         option = cmds[1]
         # LOG.info(cmds)
 
+        if option == 'orders':
+            if len(self.symbols) > 0:
+                keyboard = [[InlineKeyboardButton(symbol, callback_data=f"{exchange}.{symbol}.{option}")] for symbol in self.symbols]
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                # Send message with text and appended InlineKeyboard
+                query.edit_message_text(f"Selected exchange: {exchange}, Choose a symbol of orders", reply_markup=reply_markup)
+                return THIRD
+            else:
+                query.edit_message_text("No symbol for orders... See you next time!")
+                return ConversationHandler.END 
+
         self.command_handler(exchange, option, update, context)
+
+        # query.edit_message_text(text="See you next time!")
+        return ConversationHandler.END
+
+    def third_conv_end(self, update: Update, context: CallbackContext) -> int:
+        """Returns `ConversationHandler.END`, which tells the
+        ConversationHandler that the conversation is over.
+        """
+        query = update.callback_query
+        query.answer()
+
+        cmds = query.data.split(sep='.')
+        exchange = cmds[0]
+        symbol = cmds[1]
+        option = cmds[2]
+        # LOG.info(cmds)
+
+        self.command_handler(exchange, option, update, context, symbol)
 
         # query.edit_message_text(text="See you next time!")
         return ConversationHandler.END
