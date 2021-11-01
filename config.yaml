@@ -12,7 +12,7 @@ cache: kafka
 kafka:
     # ip/port are for the bootstrap server
     # ip: '127.0.0.1'
-    ip: '1.234.23.41' 
+    ip: '203.245.29.236' 
     # ip: 'loopyquant01.cafe24.com'
     port: 9092 
     topic_key: 'logan.test01-'
@@ -72,7 +72,7 @@ exchanges:
         #     depth_interval: 1000ms
         #     book_interval: 100000
         # trades: [BTC-USDT-PERP]
-        # ticker: [BTC-USDT-PERP]
+        ticker: [BTC-USDT-PERP]
         funding: [BTC-USDT-PERP, ETH-USDT-PERP]
         balances: []
         # positions: [BTC-USDT-PERP]

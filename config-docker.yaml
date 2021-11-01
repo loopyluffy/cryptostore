@@ -4,8 +4,10 @@
 cache: kafka
 
 kafka:
-    ip: 'broker'
-    port: 29092
+    # ip: 'broker'
+    # port: 29092
+    ip: '203.245.29.236' 
+    port: 9092
     topic_key: 'loopyquant01.01-'
     start_flush: false
 redis:
@@ -19,7 +21,7 @@ redis:
 exchanges:
     BINANCE_FUTURES:
         # trades: [BTC-USDT-PERP]
-        # ticker: [BTC-USDT-PERP]
+        ticker: [BTC-USDT-PERP]
         funding: [BTC-USDT-PERP, ETH-USDT-PERP]
         balances: []
 
