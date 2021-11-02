@@ -72,7 +72,7 @@ exchanges:
         #     depth_interval: 1000ms
         #     book_interval: 100000
         # trades: [BTC-USDT-PERP]
-        ticker: [BTC-USDT-PERP]
+        ticker: [BTC-USDT-PERP, ETH-USDT-PERP]
         funding: [BTC-USDT-PERP, ETH-USDT-PERP]
         balances: []
         # positions: [BTC-USDT-PERP]

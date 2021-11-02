@@ -21,7 +21,7 @@ redis:
 exchanges:
     BINANCE_FUTURES:
         # trades: [BTC-USDT-PERP]
-        ticker: [BTC-USDT-PERP]
+        ticker: [BTC-USDT-PERP, ETH-USDT-PERP]
         funding: [BTC-USDT-PERP, ETH-USDT-PERP]
         balances: []
 

@@ -99,7 +99,7 @@ class LoopyKafka(Kafka):
             self.ids[key] = None
             kafka = StorageEngines.confluent_kafka
             self.conn[key] = kafka.Consumer({'bootstrap.servers': f"{self.ip}:{self.port}",
-                                             'client.id': f'simple_strategy-{key}',
+                                             'client.id': f'grid_protection_strategy-{key}',
                                              'enable.auto.commit': False,
                                              'group.id': f'loopyluffy-{key}',
                                              'max.poll.interval.ms': 3000000,
@@ -116,6 +116,7 @@ class LoopyKafka(Kafka):
 
         return self.conn[key]
 
+    """
     def reset_latest(self, topic_key, exchange, feed):
         kafka = StorageEngines.confluent_kafka
         key = f'{topic_key}{feed}-{exchange}'.lower()
@@ -144,6 +145,48 @@ class LoopyKafka(Kafka):
             self.ids[key] = message
         LOG.info("%s: Committing offset %d", key, self.ids[key].offset())
         self._conn(key).commit(message=self.ids[key])
+        self.ids[key] = None
+    """
+
+    def reset_latest(self, topic_key, exchange, feed):
+        kafka = StorageEngines.confluent_kafka
+        key = f'{topic_key}{feed}-{exchange}'.lower()
+        if key not in self.conn:
+            self.ids[key] = None
+            kafka = StorageEngines.confluent_kafka
+            self.conn[key] = kafka.Consumer({'bootstrap.servers': f"{self.ip}:{self.port}",
+                                             'client.id': f'grid_protection_strategy-{key}',
+                                             'enable.auto.commit': False,
+                                             'group.id': f'loopyluffy-{key}',
+                                             'max.poll.interval.ms': 3000000,
+                                            #  to read the message from latest @logan
+                                             "auto.offset.reset" : "latest"})
+            self.conn[key].subscribe([key], on_assign=self._reset_offsets)
+
+    def _reset_offsets(self, consumer, partitions):
+        key = partitions[0].topic 
+        start_offset = partitions[0].offset
+        first_offset, stop_offset = consumer.get_watermark_offsets(partitions[0])
+        LOG.info(f'topic: {key}, current_offset: {start_offset}, latest_offset:{stop_offset}')
+        if start_offset == -1:
+            return 
+
+        offset_diff = stop_offset - start_offset
+        LOG.info(f'topic: {key}, offset_diff: {offset_diff}')
+        if offset_diff <= 0:
+            return 
+
+        data = consumer.consume(offset_diff, timeout=0.5)
+        if len(data) > 0:
+            LOG.info("%s: Read %d messages from Kafka", keyu, len(data))
+        else:
+            LOG.info('why?...???')
+            return
+
+        for message in data:
+            self.ids[key] = message
+        LOG.info("%s: Committing offset %d", key, self.ids[key].offset())
+        consumer.commit(message=self.ids[key])
         self.ids[key] = None
 
     def read(self, topic_key, exchange, feed, start=None, end=None):
