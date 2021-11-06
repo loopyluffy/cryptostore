@@ -49,7 +49,7 @@ setup(
         'zmq': ['pyzmq'],
         'drive': ['google-auth', 'google-api-python-client'],
         'telegram': ['python-telegram-bot'],
-        'loopyquant':['aiokafka', 'confluent-kafka>=1.7.0', 'fastavro' 'python-telegram-bot']
+        'loopyquant':['aiokafka', 'confluent-kafka>=1.7.0', 'fastavro', 'python-telegram-bot']
     },
     entry_points={
         'console_scripts': ['cryptostore=cryptostore.bin.cryptostore:main'],
