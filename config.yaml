@@ -13,9 +13,10 @@ kafka:
     # ip/port are for the bootstrap server
     # ip: '127.0.0.1'
     ip: '203.245.29.236' 
-    # ip: 'loopyquant01.cafe24.com'
     port: 9092 
-    topic_key: 'logan.test01-'
+    schema_registry_ip: '203.245.29.236'
+    schema_registry_port: 8081
+    topic_key: 'logan.test02-'
     # ip: 'broker'
     # port: 29092
     # topic_key: 'loopyquant01.01-'
@@ -75,8 +76,8 @@ exchanges:
         ticker: [BTC-USDT-PERP, ETH-USDT-PERP]
         funding: [BTC-USDT-PERP, ETH-USDT-PERP]
         balances: []
-        # positions: [BTC-USDT-PERP]
-        # order_info: [BTC-USDT-PERP] 
+        positions: []
+        order_info: [] 
 
     # BINANCE:
     #     l2_book:
@@ -241,7 +242,7 @@ storage_interval: 10
 
 # Cryptostore Plugin Interface
 plugins:
-    simple_strategy:
+    grid_protection_strategy:
         module: [cryptostore.strategy.grid_protection_strategy, GridProtectionStrategy]
         config: sandbox/strategy_config.yaml 
     # restfeed:

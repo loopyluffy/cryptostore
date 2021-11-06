@@ -8,7 +8,9 @@ kafka:
     # port: 29092
     ip: '203.245.29.236' 
     port: 9092
-    topic_key: 'loopyquant01.01-'
+    schema_registry_ip: '203.245.29.236'
+    schema_registry_port: 8081
+    topic_key: 'loopyquant01.02-'
     start_flush: false
 redis:
     ip: '127.0.0.1'
@@ -24,9 +26,11 @@ exchanges:
         ticker: [BTC-USDT-PERP, ETH-USDT-PERP]
         funding: [BTC-USDT-PERP, ETH-USDT-PERP]
         balances: []
+        positions: []
+        order_info: [] 
 
 # Cryptostore Plugin Interface
 plugins:
-    simple_strategy:
+    grid_protection_strategy:
         module: [cryptostore.strategy.grid_protection_strategy, GridProtectionStrategy]
         config: sandbox/strategy_config.yaml 

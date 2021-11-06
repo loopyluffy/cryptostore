@@ -91,8 +91,7 @@ class Collector(Process):
                 liq_cb = LiquidationsStream
                 candles_cb = CandlesStream
             elif cache == 'kafka':
-                # added user data callbacks @logan
-                from cryptofeed.backends.kafka import TradeKafka, BookKafka, TickerKafka, FundingKafka, OpenInterestKafka, LiquidationsKafka, CandlesKafka, BalancesKafka, PositionsKafka, AccountConfigKafka, OrderInfoKafka
+                from cryptofeed.backends.kafka import TradeKafka, BookKafka, TickerKafka, FundingKafka, OpenInterestKafka, LiquidationsKafka, CandlesKafka
                 trade_cb = TradeKafka
                 book_cb = BookKafka
                 ticker_cb = TickerKafka
@@ -102,10 +101,11 @@ class Collector(Process):
                 candles_cb = CandlesKafka
 
                 # added user data callbacks @logan
-                balances_cb = BalancesKafka 
-                positions_cb = PositionsKafka
-                account_config_cb = AccountConfigKafka
-                order_info_cb = OrderInfoKafka 
+                from cryptofeed.backends.loopy_kafka import LoopyBalancesKafka, LoopyPositionsKafka, LoopyOrderInfoKafka #, LoopyAccountConfigKafka
+                balances_cb = LoopyBalancesKafka 
+                positions_cb = LoopyPositionsKafka
+                # account_config_cb = AccountConfigKafka
+                order_info_cb = LoopyOrderInfoKafka 
 
                 kwargs = {'bootstrap': self.config['kafka']['ip'], 'port': self.config['kafka']['port']}
 
@@ -139,12 +139,24 @@ class Collector(Process):
                 cb[CANDLES] = [candles_cb(key=topic_key+CANDLES, **kwargs)]
             # callback setting for only binance user data stream... @logan
             elif callback_type == BALANCES:
+                kwargs['schema_registry_ip'] = self.config['kafka']['schema_registry_ip']
+                kwargs['schema_registry_port'] = self.config['kafka']['schema_registry_port']
                 cb[BALANCES] = [balances_cb(key=topic_key+BALANCES, **kwargs)]
+            elif callback_type == POSITIONS:
+                kwargs['schema_registry_ip'] = self.config['kafka']['schema_registry_ip']
+                kwargs['schema_registry_port'] = self.config['kafka']['schema_registry_port']
+                cb[POSITIONS] = [positions_cb(key=topic_key+POSITIONS, **kwargs)]
+            elif callback_type == ORDER_INFO:
+                kwargs['schema_registry_ip'] = self.config['kafka']['schema_registry_ip']
+                kwargs['schema_registry_port'] = self.config['kafka']['schema_registry_port']
+                cb[ORDER_INFO] = [order_info_cb(key=topic_key+ORDER_INFO, **kwargs)]
+            # elif callback_type == ACCOUNT_CONFIG:
+            #     cb[BALACCOUNT_CONFIGANCES] = [balances_cb(key=topic_key+BALANCES, **kwargs)]
                  
-                if self.exchange == 'BINANCE_FUTURES' or self.exchange == 'BINANCE_DELIVERY':
-                    cb[POSITIONS] = [positions_cb(key=topic_key+POSITIONS, **kwargs)]
-                    cb[ACCOUNT_CONFIG] = [account_config_cb(key=topic_key+ACCOUNT_CONFIG, **kwargs)]
-                    cb[ORDER_INFO] = [order_info_cb(key=topic_key+ORDER_INFO, **kwargs)]
+                # if self.exchange == 'BINANCE_FUTURES' or self.exchange == 'BINANCE_DELIVERY':
+                #     cb[POSITIONS] = [positions_cb(key=topic_key+POSITIONS, **kwargs)]
+                #     cb[ACCOUNT_CONFIG] = [account_config_cb(key=topic_key+ACCOUNT_CONFIG, **kwargs)]
+                #     cb[ORDER_INFO] = [order_info_cb(key=topic_key+ORDER_INFO, **kwargs)]
 
             if 'pass_through' in self.config:
                 if self.config['pass_through']['type'] == 'zmq':

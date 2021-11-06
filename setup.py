@@ -42,14 +42,14 @@ setup(
     ],
     extras_require={
         'redis': ['redis', 'aioredis'],
-        'kafka': ['aiokafka', 'confluent-kafka'],
+        'kafka': ['aiokafka', 'confluent-kafka>=1.7.0'],
         'arctic': ['arctic'],
         'gcs': ['google-cloud-storage'],
         'aws': ['boto3'],
         'zmq': ['pyzmq'],
         'drive': ['google-auth', 'google-api-python-client'],
         'telegram': ['python-telegram-bot'],
-        'loopyquant':['aiokafka', 'confluent-kafka', 'python-telegram-bot']
+        'loopyquant':['aiokafka', 'confluent-kafka>=1.7.0', 'fastavro' 'python-telegram-bot']
     },
     entry_points={
         'console_scripts': ['cryptostore=cryptostore.bin.cryptostore:main'],
