@@ -1,6 +1,7 @@
 version: "3.7"
 services:
-  cryptostore:
+  # cryptostore:
+  service:
     env_file:
       - env.s3config
     logging:

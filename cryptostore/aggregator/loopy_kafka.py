@@ -11,7 +11,7 @@ from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.avro import AvroDeserializer
 from confluent_kafka.serialization import StringDeserializer
 
-from cryptofeed.defines import BALANCES, POSITIONS, ORDER_INFO
+from cryptofeed.defines import L2_BOOK, L3_BOOK, TRADES, TICKER, FUNDING, OPEN_INTEREST, BALANCES, POSITIONS, ORDER_INFO
 
 from cryptostore.engines import StorageEngines
 from cryptostore.aggregator.cache import Cache
@@ -85,13 +85,13 @@ class LoopyKafka(Kafka):
         consumer.commit(message=self.ids[key])
         self.ids[key] = None
 
-    def read(self, topic_key, exchange, feed, start=None, end=None):
+    def read(self, topic_key, exchange, feed, latest_offset=True):
         key = f'{topic_key}{feed}-{exchange}'.lower()
 
         data = self._conn(key).consume(1000000, timeout=0.5)
 
-        if len(data) > 0:
-            LOG.info("%s: Read %d messages from Kafka", key, len(data))
+        # if len(data) > 0:
+        #     LOG.info("%s: Read %d messages from Kafka", key, len(data))
             
         ret = []
 
@@ -109,11 +109,22 @@ class LoopyKafka(Kafka):
             if feed in {TRADES, TICKER, FUNDING, OPEN_INTEREST, BALANCES, POSITIONS, ORDER_INFO}:
                 ret.append(update)
 
+        if latest_offset == True and self.ids[key] is not None:
+            kafka = StorageEngines['confluent_kafka.admin']
+            current_offset, latest_offset = self._conn(key).get_watermark_offsets(kafka.TopicPartition(key, 0))
+            read_offset = self.ids[key].offset()
+            if read_offset < latest_offset - 1:
+                # LOG.info(f'{key}: check to cosume from latest, read_offset: {read_offset}, latest_offset:{latest_offset}')
+                return []
+            # else:
+            #     LOG.info("%s: Read %d messages from Kafka", key, len(data))
+            #     LOG.info(f'{key}: check to cosume from latest, read_offset: {read_offset}, latest_offset:{latest_offset}')
+
         return ret
 
     def delete(self, topic_key, exchange, feed):
         key = f'{topic_key}{feed}-{exchange}'.lower()
-        LOG.info("%s: Committing offset %d", key, self.ids[key].offset())
+        # LOG.info("%s: Committing offset %d", key, self.ids[key].offset())
         self._conn(key).commit(message=self.ids[key])
         self.ids[key] = None
 
@@ -152,6 +163,7 @@ class LoopyAvroKafka(LoopyKafka):
                         {"name": "status", "type": "string"},
                         {"name": "type", "type": "string"},
                         {"name": "price", "type": "float"},
+                        {"name": "condition_price", "type": "float"},
                         {"name": "amount", "type": "float"},
                         {"name": "remaining", "type": "float"},
                         {"name": "timestamp", "type": "float"},
@@ -254,7 +266,7 @@ class LoopyAvroKafka(LoopyKafka):
                 LOG.error("Kafka DeserializingConsumer for topic: '{key}' running on PID %d died due to exception", os.getpid(), exc_info=True)
                 raise    
 
-    def read(self, topic_key, exchange, feed, start=None, end=None):
+    def read(self, topic_key, exchange, feed, latest_offset=True):
 
         # if feed.find(ORDER_INFO) < 0:
         #     return super().read(topic_key, exchange, feed)

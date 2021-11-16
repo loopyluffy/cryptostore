@@ -7,7 +7,7 @@ associated with this software.
 import json
 import logging
 
-# from cryptofeed.defines import L2_BOOK, L3_BOOK, TRADES, TICKER, FUNDING, OPEN_INTEREST, BALANCES, POSITIONS, ORDER_INFO
+from cryptofeed.defines import L2_BOOK, L3_BOOK, TRADES, TICKER, FUNDING, OPEN_INTEREST
 
 from cryptostore.engines import StorageEngines
 from cryptostore.aggregator.cache import Cache

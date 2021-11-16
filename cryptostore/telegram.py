@@ -75,7 +75,7 @@ class AccountBot(TelegramBot):
         self.command_handler = func 
 
         conv_handler = ConversationHandler(
-            entry_points=[CommandHandler(cmd, self.account)],
+            entry_points=[CommandHandler(cmd, self.exchange)],
             states={
                 FIRST: [
                     CallbackQueryHandler(self.option),
@@ -87,14 +87,14 @@ class AccountBot(TelegramBot):
                     CallbackQueryHandler(self.third_conv_end),
                 ],
             },
-            fallbacks=[CommandHandler('account', self.account)],
+            fallbacks=[CommandHandler(cmd, self.exchange)],
             run_async = run_async
         )
 
         # Add ConversationHandler to dispatcher that will be used for handling updates
         self.updater.dispatcher.add_handler(conv_handler)
 
-    def account(self, update: Update, context: CallbackContext) -> int:
+    def exchange(self, update: Update, context: CallbackContext) -> int:
         """Send message on `/start`."""
         # Get user that sent /start and log his name
         # user = update.message.from_user
@@ -113,7 +113,7 @@ class AccountBot(TelegramBot):
             keyboard = [[InlineKeyboardButton(exchange, callback_data=exchange)] for exchange in self.exchanges]
             reply_markup = InlineKeyboardMarkup(keyboard)
             # Send message with text and appended InlineKeyboard
-            update.message.reply_text("Start query account, Choose a exchange", reply_markup=reply_markup)
+            update.message.reply_text("Start query, Choose a exchange", reply_markup=reply_markup)
             return FIRST
         else:
             update.message.reply_text("No exchange options... See you next time!")
@@ -163,31 +163,20 @@ class AccountBot(TelegramBot):
         option = cmds[1]
         # LOG.info(cmds)
 
-        if option == 'orders':
-            if len(self.symbols) > 0:
+        if option == 'balances' or option == 'positions':
+            self.command_handler(exchange, option, update, context)
+            # query.edit_message_text(text="See you next time!")
+            return ConversationHandler.END
+
+        if len(self.symbols) > 0:
                 keyboard = [[InlineKeyboardButton(symbol, callback_data=f"{exchange}.{symbol}.{option}")] for symbol in self.symbols]
                 reply_markup = InlineKeyboardMarkup(keyboard)
                 # Send message with text and appended InlineKeyboard
-                query.edit_message_text(f"Selected exchange: {exchange}, Choose a symbol of orders", reply_markup=reply_markup)
+                query.edit_message_text(f"Selected exchange: {exchange}, Choose a symbol", reply_markup=reply_markup)
                 return THIRD
-            else:
-                query.edit_message_text("No symbol for orders... See you next time!")
-                return ConversationHandler.END 
-        elif option == 'grids':
-            if len(self.symbols) > 0:
-                keyboard = [[InlineKeyboardButton(symbol, callback_data=f"{exchange}.{symbol}.{option}")] for symbol in self.symbols]
-                reply_markup = InlineKeyboardMarkup(keyboard)
-                # Send message with text and appended InlineKeyboard
-                query.edit_message_text(f"Selected exchange: {exchange}, Choose a symbol of grids", reply_markup=reply_markup)
-                return THIRD
-            else:
-                query.edit_message_text("No symbol for grids... See you next time!")
-                return ConversationHandler.END 
-
-        self.command_handler(exchange, option, update, context)
-
-        # query.edit_message_text(text="See you next time!")
-        return ConversationHandler.END
+        else:
+            query.edit_message_text("No symbol for orders... See you next time!")
+            return ConversationHandler.END
 
     def third_conv_end(self, update: Update, context: CallbackContext) -> int:
         """Returns `ConversationHandler.END`, which tells the
@@ -203,6 +192,102 @@ class AccountBot(TelegramBot):
         # LOG.info(cmds)
 
         self.command_handler(exchange, option, update, context, symbol)
+
+        # query.edit_message_text(text="See you next time!")
+        return ConversationHandler.END
+
+
+class GridBot(AccountBot):
+    def __init__(self, token, chat_id):
+        super().__init__(token, chat_id)
+
+    #     self.exchanges = []
+    #     self.symbols = []
+    #     self.options = []
+        self.grid_options = []
+        # command_handler(exchange, option, update, context, symbol=None)
+        self.grid_command_handler = None
+
+    def add_command(self, exchanges: list, symbols: list, options: list, cmd: str, func, run_async=False):
+        # assert isinstance(exchanges, list)
+        # assert isinstance(options, list)
+
+        self.exchanges = exchanges 
+        self.symbols = symbols
+        
+        if cmd == 'grid':
+            self.grid_options = options
+            self.grid_command_handler = func 
+            states={
+                FIRST: [
+                    CallbackQueryHandler(self.grid_option),
+                ],
+                SECOND: [
+                    CallbackQueryHandler(self.second_conv_end),
+                ],
+                THIRD: [
+                    CallbackQueryHandler(self.grid_third_conv_end),
+                ],
+            } 
+        else: # cmd == 'account'
+            self.options = options
+            self.command_handler = func
+            states={
+                FIRST: [
+                    CallbackQueryHandler(self.option),
+                ],
+                SECOND: [
+                    CallbackQueryHandler(self.second_conv_end),
+                ],
+                THIRD: [
+                    CallbackQueryHandler(self.third_conv_end),
+                ],
+            }  
+
+        conv_handler = ConversationHandler(
+            entry_points=[CommandHandler(cmd, self.exchange)],
+            states=states,
+            fallbacks=[CommandHandler(cmd, self.exchange)],
+            run_async = run_async
+        )
+
+        # Add ConversationHandler to dispatcher that will be used for handling updates
+        self.updater.dispatcher.add_handler(conv_handler)
+
+    def grid_option(self, update: Update, context: CallbackContext) -> int:
+        """Parses the CallbackQuery and updates the message text."""
+        query = update.callback_query
+
+        # CallbackQueries need to be answered, even if no notification to the user is needed
+        # Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
+        query.answer()
+
+        exchange = query.data
+
+        if len(self.options) > 0:
+            keyboard = [[InlineKeyboardButton(option, callback_data=f"{exchange}.{option}")] for option in self.grid_options]
+            reply_markup = InlineKeyboardMarkup(keyboard)
+            # Send message with text and appended InlineKeyboard
+            query.edit_message_text(f"Selected exchange: {exchange}, Choose a option", reply_markup=reply_markup)
+            return SECOND
+        else:
+            query.edit_message_text("No exchange options... See you next time!")
+            return ConversationHandler.END
+
+    def grid_third_conv_end(self, update: Update, context: CallbackContext) -> int:
+        """Returns `ConversationHandler.END`, which tells the
+        ConversationHandler that the conversation is over.
+        """
+        query = update.callback_query
+        query.answer()
+
+        cmds = query.data.split(sep='.')
+        exchange = cmds[0]
+        symbol = cmds[1]
+        option = cmds[2]
+        # LOG.info(cmds)
+
+        self.grid_command_handler(exchange, option, update, context, symbol)
 
         # query.edit_message_text(text="See you next time!")
         return ConversationHandler.END

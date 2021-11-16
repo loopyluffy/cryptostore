@@ -16,7 +16,7 @@ kafka:
     port: 9092 
     schema_registry_ip: '203.245.29.236'
     schema_registry_port: 8081
-    topic_key: 'logan.test02-'
+    topic_key: 'logan.test03-'
     # ip: 'broker'
     # port: 29092
     # topic_key: 'loopyquant01.01-'
@@ -72,7 +72,7 @@ exchanges:
         #     book_delta: true
         #     depth_interval: 1000ms
         #     book_interval: 100000
-        # trades: [BTC-USDT-PERP]
+        trades: [BTC-USDT-PERP, ETH-USDT-PERP]
         ticker: [BTC-USDT-PERP, ETH-USDT-PERP]
         funding: [BTC-USDT-PERP, ETH-USDT-PERP]
         balances: []
@@ -242,8 +242,11 @@ storage_interval: 10
 
 # Cryptostore Plugin Interface
 plugins:
-    grid_protection_strategy:
-        module: [cryptostore.strategy.grid_protection_strategy, GridProtectionStrategy]
+    # grid_protection_strategy:
+    #     module: [cryptostore.strategy.grid_protection_strategy, GridProtectionStrategy]
+    #     config: sandbox/strategy_config.yaml 
+    grid_trend_strategy:
+        module: [cryptostore.strategy.grid_trend_strategy, GridTrendStrategy]
         config: sandbox/strategy_config.yaml 
     # restfeed:
     #     module: [cryptofeed.plugin.restfeed, Restfeed]
