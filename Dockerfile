@@ -5,6 +5,8 @@ COPY setup.py /
 COPY cryptostore /cryptostore
 # add private info... @logan
 # COPY sandbox /sandbox
+RUN mkdir sandbox
+RUN mkdir cryptostore/strategy
 
 ## Add any keys, config files, etc needed here
 # COPY access-key.json /
