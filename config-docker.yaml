@@ -20,14 +20,14 @@ redis:
     retention_time: null
     start_flush: true
 
-exchanges:
-    BINANCE_FUTURES:
+# exchanges:
+    # BINANCE_FUTURES:
         # trades: [BTC-USDT-PERP]
         # ticker: [BTC-USDT-PERP, ETH-USDT-PERP]
         # funding: [BTC-USDT-PERP, ETH-USDT-PERP]
-        balances: []
-        positions: []
-        order_info: [] 
+        # balances: []
+        # positions: []
+        # order_info: [] 
 
 # Cryptostore Plugin Interface
 # plugins:
