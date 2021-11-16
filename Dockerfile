@@ -4,7 +4,7 @@ COPY config-docker.yaml /config.yaml
 COPY setup.py /
 COPY cryptostore /cryptostore
 # add private info... @logan
-COPY sandbox /sandbox
+# COPY sandbox /sandbox
 
 ## Add any keys, config files, etc needed here
 # COPY access-key.json /
