@@ -21,14 +21,21 @@ LOG = logging.getLogger('cryptostore')
 
 
 class LoopyKafka(Kafka):
+    def __init__(self, ip, port, group_id=None, flush=False):
+        super().__init__(ip, port, flush)
+        self.group_id = group_id if group_id else 'loopy' 
+        # self.group_ids = {}
+
     def _conn(self, key):
         if key not in self.conn:
             self.ids[key] = None
+            # if key not in self.group_ids:
+            #     self.group_ids[key] = f'{self.group_id}-{key}' 
             kafka = StorageEngines.confluent_kafka
             self.conn[key] = kafka.Consumer({'bootstrap.servers': f"{self.ip}:{self.port}",
-                                             'client.id': f'grid_protection_strategy-{key}',
+                                             'client.id': f'loopyquant_strategy-{key}',
                                              'enable.auto.commit': False,
-                                             'group.id': f'loopyluffy-{key}',
+                                             'group.id': f'{self.group_id}-{key}',
                                              'max.poll.interval.ms': 3000000,
                                             #  to read the message from latest @logan
                                              "auto.offset.reset" : "latest"})
@@ -130,11 +137,11 @@ class LoopyKafka(Kafka):
 
 
 class LoopyAvroKafka(LoopyKafka):
-    def __init__(self, ip, port, schema_registry_ip, schema_registry_port, flush=False):
+    def __init__(self, ip, port, schema_registry_ip, schema_registry_port, group_id=None, flush=False):
         assert isinstance(schema_registry_ip, str)
         assert isinstance(schema_registry_port, int)
 
-        super().__init__(ip, port, flush)
+        super().__init__(ip, port, group_id, flush)
 
         self.schema_registry_conf = {'url': f'http://{schema_registry_ip}:{schema_registry_port}'}
 
@@ -222,7 +229,7 @@ class LoopyAvroKafka(LoopyKafka):
             consumer_conf = {'bootstrap.servers': f"{self.ip}:{self.port}",
                             'key.deserializer': string_deserializer,
                             'value.deserializer': avro_deserializer,
-                            'group.id': f'loopyluffy-{key}',
+                            'group.id': f'{self.group_id}-{key}',
                             'auto.offset.reset': "latest"}
             self.conn[key] = DeserializingConsumer(consumer_conf)
 
