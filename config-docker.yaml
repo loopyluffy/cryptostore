@@ -31,6 +31,9 @@ redis:
 
 # Cryptostore Plugin Interface
 # plugins:
-#     grid_protection_strategy:
-#         module: [cryptostore.strategy.grid_protection_strategy, GridProtectionStrategy]
-#         config: sandbox/strategy_config.yaml 
+    # grid_protection_strategy:
+    #     module: [cryptostore.strategy.grid_protection_strategy, GridProtectionStrategy]
+    #     config: sandbox/strategy_config.yaml 
+    # grid_trend_strategy:
+    #         module: [cryptostore.strategy.grid_trend_strategy, GridTrendStrategy]
+    #         config: sandbox/strategy_config.yaml 
