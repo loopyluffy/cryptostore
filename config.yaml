@@ -19,7 +19,7 @@ kafka:
     topic_key: 'logan.test03-'
     # ip: 'broker'
     # port: 29092
-    # topic_key: 'loopyquant01.01-'
+    # topic_key: 'loopyquant01.03-'
     start_flush: false
 redis:
     ip: '127.0.0.1'

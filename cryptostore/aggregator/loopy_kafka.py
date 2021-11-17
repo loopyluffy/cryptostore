@@ -33,9 +33,11 @@ class LoopyKafka(Kafka):
             #     self.group_ids[key] = f'{self.group_id}-{key}' 
             kafka = StorageEngines.confluent_kafka
             self.conn[key] = kafka.Consumer({'bootstrap.servers': f"{self.ip}:{self.port}",
-                                             'client.id': f'loopyquant_strategy-{key}',
+                                            #  'client.id': f'loopyquant_strategy-{key}',
+                                             'client.id': self.group_id,
                                              'enable.auto.commit': False,
-                                             'group.id': f'{self.group_id}-{key}',
+                                            #  'group.id': f'{self.group_id}-{key}',
+                                             'group.id': self.group_id,
                                              'max.poll.interval.ms': 3000000,
                                             #  to read the message from latest @logan
                                              "auto.offset.reset" : "latest"})
@@ -57,9 +59,11 @@ class LoopyKafka(Kafka):
             self.ids[key] = None
             kafka = StorageEngines.confluent_kafka
             self.conn[key] = kafka.Consumer({'bootstrap.servers': f"{self.ip}:{self.port}",
-                                             'client.id': f'grid_protection_strategy-{key}',
+                                            #  'client.id': f'grid_protection_strategy-{key}',
+                                             'client.id': self.group_id,
                                              'enable.auto.commit': False,
-                                             'group.id': f'loopyluffy-{key}',
+                                            #  'group.id': f'loopyluffy-{key}',
+                                             'group.id': self.group_id,
                                              'max.poll.interval.ms': 3000000,
                                             #  to read the message from latest @logan
                                              "auto.offset.reset" : "latest"})
@@ -229,7 +233,8 @@ class LoopyAvroKafka(LoopyKafka):
             consumer_conf = {'bootstrap.servers': f"{self.ip}:{self.port}",
                             'key.deserializer': string_deserializer,
                             'value.deserializer': avro_deserializer,
-                            'group.id': f'{self.group_id}-{key}',
+                            # 'group.id': f'{self.group_id}-{key}',
+                            'group.id': self.group_id,
                             'auto.offset.reset': "latest"}
             self.conn[key] = DeserializingConsumer(consumer_conf)
 
