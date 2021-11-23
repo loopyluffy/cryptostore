@@ -124,13 +124,14 @@ class LoopyKafka(Kafka):
             kafka = StorageEngines['confluent_kafka.admin']
             current_offset, latest_offset = self._conn(key).get_watermark_offsets(kafka.TopicPartition(key, 0))
             read_offset = self.ids[key].offset()
-            if read_offset < latest_offset - 1:
+            if read_offset is None or latest_offset is None or read_offset < latest_offset - 1:
                 # LOG.info(f'{key}: check to cosume from latest, read_offset: {read_offset}, latest_offset:{latest_offset}')
                 return []
             # else:
             #     LOG.info("%s: Read %d messages from Kafka", key, len(data))
             #     LOG.info(f'{key}: check to cosume from latest, read_offset: {read_offset}, latest_offset:{latest_offset}')
 
+        # LOG.info(f'return messages: {feed}: {ret}')
         return ret
 
     def delete(self, topic_key, exchange, feed):
@@ -285,8 +286,8 @@ class LoopyAvroKafka(LoopyKafka):
 
         key = f'{topic_key}{feed}-{exchange}'.lower()
         data = self._consume(key, timeout=0.5)
-        if data:
-            LOG.info("%s: Read %d messages from Kafka", key, len(data))
+        # if data:
+        #     LOG.info("%s: Read %d messages from Kafka", key, len(data))
             
         ret = []
 

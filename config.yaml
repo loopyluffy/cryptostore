@@ -77,6 +77,27 @@ exchanges:
         funding: [BTC-USDT-PERP, ETH-USDT-PERP]
         balances: []
         positions: []
+        order_info: []
+        
+    BINANCE_DELIVERY:
+        channel_timeouts:
+            l2_book: 30
+            trades: 120
+            ticker: 120
+            funding: -1
+        retries: -1
+
+        # l2_book:
+        #     symbols: [BTC-USDT-PERP]
+        #     max_depth: 10
+        #     book_delta: true
+        #     depth_interval: 1000ms
+        #     book_interval: 100000
+        trades: [BTC-USD-PERP, ETH-USD-PERP]
+        ticker: [BTC-USD-PERP, ETH-USD-PERP]
+        funding: [BTC-USD-PERP, ETH-USD-PERP]
+        balances: []
+        positions: []
         order_info: [] 
 
     # BINANCE:

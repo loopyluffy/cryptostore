@@ -30,11 +30,11 @@ class Spawn(Process):
                 msg = json.loads(message)
                 if msg['op'] == 'stop':
                     exchange = msg['exchange']
-                    LOG.info("Terminating %s", exchange)
+                    # LOG.info("Terminating %s", exchange)
                     procs[exchange].terminate()
                     del procs[exchange]
                 elif msg['op'] == 'start':
-                    LOG.info("Starting %s", msg)
+                    # LOG.info("Starting %s", msg)
                     exchange = msg['exchange']
                     collector = msg['collector']
                     config = msg['config']
