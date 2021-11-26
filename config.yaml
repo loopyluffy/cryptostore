@@ -16,10 +16,10 @@ kafka:
     port: 9092 
     schema_registry_ip: '203.245.29.236'
     schema_registry_port: 8081
-    topic_key: 'logan.test03-'
+    topic_key: 'loopyquant00.01'
     # ip: 'broker'
     # port: 29092
-    # topic_key: 'loopyquant01.03-'
+    # topic_key: 'loopyquant01.01'
     start_flush: false
 redis:
     ip: '127.0.0.1'
@@ -67,18 +67,18 @@ exchanges:
             funding: -1
         retries: -1
 
-        # l2_book:
-        #     symbols: [BTC-USDT-PERP]
-        #     max_depth: 10
-        #     book_delta: true
-        #     depth_interval: 1000ms
-        #     book_interval: 100000
-        trades: [BTC-USDT-PERP, ETH-USDT-PERP]
-        ticker: [BTC-USDT-PERP, ETH-USDT-PERP]
-        funding: [BTC-USDT-PERP, ETH-USDT-PERP]
-        balances: []
-        positions: []
-        order_info: []
+    #     # l2_book:
+    #     #     symbols: [BTC-USDT-PERP]
+    #     #     max_depth: 10
+    #     #     book_delta: true
+    #     #     depth_interval: 1000ms
+    #     #     book_interval: 100000
+        trades: [BTC-USDT-PERP, ETH-USDT-PERP, ADA-USDT-PERP, LUNA-USDT-PERP]
+        ticker: [BTC-USDT-PERP, ETH-USDT-PERP, ADA-USDT-PERP, LUNA-USDT-PERP]
+        funding: [BTC-USDT-PERP, ETH-USDT-PERP, ADA-USDT-PERP, LUNA-USDT-PERP]
+    #     balances: []
+    #     positions: []
+    #     order_info: []
         
     BINANCE_DELIVERY:
         channel_timeouts:
@@ -94,9 +94,9 @@ exchanges:
         #     book_delta: true
         #     depth_interval: 1000ms
         #     book_interval: 100000
-        trades: [BTC-USD-PERP, ETH-USD-PERP]
-        ticker: [BTC-USD-PERP, ETH-USD-PERP]
-        funding: [BTC-USD-PERP, ETH-USD-PERP]
+        trades: [BTC-USD-PERP, ETH-USD-PERP, ADA-USD-PERP, LUNA-USD-PERP]
+        ticker: [BTC-USD-PERP, ETH-USD-PERP, ADA-USD-PERP, LUNA-USD-PERP]
+        funding: [BTC-USD-PERP, ETH-USD-PERP, ADA-USD-PERP, LUNA-USD-PERP]
         balances: []
         positions: []
         order_info: [] 

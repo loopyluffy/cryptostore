@@ -10,7 +10,7 @@ kafka:
     port: 9092
     schema_registry_ip: '203.245.29.236'
     schema_registry_port: 8081
-    topic_key: 'loopyquant01.03-'
+    topic_key: 'loopyquant01.03'
     start_flush: false
 redis:
     ip: '127.0.0.1'
@@ -22,12 +22,19 @@ redis:
 
 # exchanges:
     # BINANCE_FUTURES:
-        # trades: [BTC-USDT-PERP]
-        # ticker: [BTC-USDT-PERP, ETH-USDT-PERP]
-        # funding: [BTC-USDT-PERP, ETH-USDT-PERP]
-        # balances: []
-        # positions: []
-        # order_info: [] 
+    #     trades: [BTC-USDT-PERP]
+    #     ticker: [BTC-USDT-PERP, ETH-USDT-PERP]
+    #     funding: [BTC-USDT-PERP, ETH-USDT-PERP]
+    #     balances: []
+    #     positions: []
+    #     order_info: [] 
+    # BINANCE_DELIVERY:
+    #     trades: [BTC-USD-PERP, ETH-USD-PERP, ADA-USD-PERP, LUNA-USD-PERP]
+    #     ticker: [BTC-USD-PERP, ETH-USD-PERP, ADA-USD-PERP, LUNA-USD-PERP]
+    #     funding: [BTC-USD-PERP, ETH-USD-PERP, ADA-USD-PERP, LUNA-USD-PERP]
+    #     balances: []
+    #     positions: []
+    #     order_info: [] 
 
 # Cryptostore Plugin Interface
 # plugins:

@@ -54,7 +54,7 @@ class LoopyKafka(Kafka):
 
     def reset_latest(self, topic_key, exchange, feed):
         kafka = StorageEngines.confluent_kafka
-        key = f'{topic_key}{feed}-{exchange}'.lower()
+        key = f'{topic_key}-{feed}-{exchange}'.lower()
         if key not in self.conn:
             self.ids[key] = None
             kafka = StorageEngines.confluent_kafka
@@ -97,7 +97,7 @@ class LoopyKafka(Kafka):
         self.ids[key] = None
 
     def read(self, topic_key, exchange, feed, latest_offset=True):
-        key = f'{topic_key}{feed}-{exchange}'.lower()
+        key = f'{topic_key}-{feed}-{exchange}'.lower()
 
         data = self._conn(key).consume(1000000, timeout=0.5)
 
@@ -135,7 +135,7 @@ class LoopyKafka(Kafka):
         return ret
 
     def delete(self, topic_key, exchange, feed):
-        key = f'{topic_key}{feed}-{exchange}'.lower()
+        key = f'{topic_key}-{feed}-{exchange}'.lower()
         # LOG.info("%s: Committing offset %d", key, self.ids[key].offset())
         self._conn(key).commit(message=self.ids[key])
         self.ids[key] = None
@@ -224,6 +224,59 @@ class LoopyAvroKafka(LoopyKafka):
                     ]
                 }
                 """
+            elif key.find(FUNDING) >= 0:
+                schema_str = """
+                {
+                    "namespace": "loopyluffy.serialization.avro",
+                    "name": "Funding",
+                    "type": "record",
+                    "fields": [
+                        {"name": "exchange", "type": "string"},
+                        {"name": "symbol", "type": "string"},
+                        {"name": "mark_price", "type": "float"},
+                        {"name": "rate", "type": "float"},
+                        {"name": "next_funding_time", "type": "float", "default": 0},
+                        {"name": "predicted_rate", "type": "float"},
+                        {"name": "timestamp", "type": "float"},
+                        {"name": "receipt_timestamp", "type": "float"}
+                    ]
+                }
+                """
+            elif key.find(TICKER) >= 0:
+                schema_str = """
+                {
+                    "namespace": "loopyluffy.serialization.avro",
+                    "name": "Ticker",
+                    "type": "record",
+                    "fields": [
+                        {"name": "exchange", "type": "string"},
+                        {"name": "symbol", "type": "string"},
+                        {"name": "bid", "type": "float"},
+                        {"name": "ask", "type": "float"},
+                        {"name": "timestamp", "type": "float"},
+                        {"name": "receipt_timestamp", "type": "float"}
+                    ]
+                }
+                """
+            elif key.find(TRADES) >= 0:
+                schema_str = """
+                {
+                    "namespace": "loopyluffy.serialization.avro",
+                    "name": "Trade",
+                    "type": "record",
+                    "fields": [
+                        {"name": "exchange", "type": "string"},
+                        {"name": "symbol", "type": "string"},
+                        {"name": "price", "type": "float"},
+                        {"name": "amount", "type": "float"},
+                        {"name": "side", "type": "string"},
+                        {"name": "id", "type": "string", "default": ""},
+                        {"name": "type", "type": "string", "default": ""},
+                        {"name": "timestamp", "type": "float"},
+                        {"name": "receipt_timestamp", "type": "float"}
+                    ]
+                }
+                """
             else:
                 return None
 
@@ -284,7 +337,9 @@ class LoopyAvroKafka(LoopyKafka):
         # if feed.find(ORDER_INFO) < 0:
         #     return super().read(topic_key, exchange, feed)
 
-        key = f'{topic_key}{feed}-{exchange}'.lower()
+        # exclude exchange in topic name
+        # key = f"{topic_key}-{feed}".lower()
+        key = f'{topic_key}-{feed}-{exchange}'.lower()
         data = self._consume(key, timeout=0.5)
         # if data:
         #     LOG.info("%s: Read %d messages from Kafka", key, len(data))
@@ -292,7 +347,12 @@ class LoopyAvroKafka(LoopyKafka):
         ret = []
 
         for message in data:
-            if feed in {BALANCES, POSITIONS, ORDER_INFO}:
+            if feed in {BALANCES, POSITIONS, ORDER_INFO, FUNDING, TRADES, TICKER}:
+                # if exchange is not None:
+                #     # LOG.info(f'kafka read in {exchange}')
+                #     if message['exchange'] == exchange:
+                #         ret.append(message)
+                # else:
                 ret.append(message)
 
         return ret

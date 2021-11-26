@@ -61,8 +61,8 @@ class Collector(Process):
         fh = FeedHandler(config=path_to_config)
 
         # topic key setting @logan
-        topic_key = self.config['kafka']['topic_key']
-        # topic_key = topic_key.lower() 
+        topic_key = self.config['kafka']['topic_key'] + '-'
+        # topic_key = topic_key.lower() s
 
         for callback_type, feed_config in self.exchange_config.items():
             # config value can be a dict or list of symbols
@@ -91,14 +91,20 @@ class Collector(Process):
                 liq_cb = LiquidationsStream
                 candles_cb = CandlesStream
             elif cache == 'kafka':
-                from cryptofeed.backends.kafka import TradeKafka, BookKafka, TickerKafka, FundingKafka, OpenInterestKafka, LiquidationsKafka, CandlesKafka
+                from cryptofeed.backends.kafka import BookKafka, OpenInterestKafka, LiquidationsKafka, CandlesKafka, FundingKafka, TradeKafka, TickerKafka
                 trade_cb = TradeKafka
-                book_cb = BookKafka
                 ticker_cb = TickerKafka
                 funding_cb = FundingKafka
+                book_cb = BookKafka
                 oi_cb = OpenInterestKafka
                 liq_cb = LiquidationsKafka
                 candles_cb = CandlesKafka
+
+                # to adopt avro format @logan
+                # from cryptofeed.backends.loopy_kafka import LoopyFundingKafka, LoopyTradeKafka, LoopyTickerKafka
+                # funding_cb = LoopyFundingKafka
+                # trade_cb = LoopyTradeKafka
+                # ticker_cb = LoopyTickerKafka
 
                 # added user data callbacks @logan
                 from cryptofeed.backends.loopy_kafka import LoopyBalancesKafka, LoopyPositionsKafka, LoopyOrderInfoKafka #, LoopyAccountConfigKafka
@@ -108,48 +114,41 @@ class Collector(Process):
                 order_info_cb = LoopyOrderInfoKafka 
 
                 kwargs = {'bootstrap': self.config['kafka']['ip'], 'port': self.config['kafka']['port']}
+                avro_kwargs = {'bootstrap': self.config['kafka']['ip'], 
+                               'port': self.config['kafka']['port'],
+                               'schema_registry_ip': self.config['kafka']['schema_registry_ip'],
+                               'schema_registry_port': self.config['kafka']['schema_registry_port']
+                            #    'none_to': ''
+                }
 
             if callback_type == TRADES:
                 # to use topic_key @logan 
                 # cb[TRADES] = [trade_cb(**kwargs)]
                 # cb[TRADES] = [trade_cb(key='logan-trades', **kwargs)]
-                cb[TRADES] = [trade_cb(key=topic_key+TRADES, **kwargs)]
+                cb[TRADES] = [trade_cb(key=topic_key+TRADES, none_to='', **avro_kwargs)]
                 # non normalized data callback added @logan
                 # cb[TRADES_RAW] = [trade_raw_cb(key=topic_key, **kwargs)]
-            elif callback_type == LIQUIDATIONS:
-                # cb[LIQUIDATIONS] = [liq_cb(**kwargs)]
-                cb[LIQUIDATIONS] = [liq_cb(key=topic_key+LIQUIDATIONS, **kwargs)]
             elif callback_type == FUNDING:
-                # cb[FUNDING] = [funding_cb(**kwargs)]
-                cb[FUNDING] = [funding_cb(key=topic_key+FUNDING, **kwargs)]
+                cb[FUNDING] = [funding_cb(key=topic_key+FUNDING, **avro_kwargs)]
             elif callback_type == TICKER:
-                # cb[TICKER] = [ticker_cb(**kwargs)]
-                cb[TICKER] = [ticker_cb(key=topic_key+TICKER, **kwargs)]
+                cb[TICKER] = [ticker_cb(key=topic_key+TICKER, **avro_kwargs)]
+            elif callback_type == LIQUIDATIONS:
+                cb[LIQUIDATIONS] = [liq_cb(key=topic_key+LIQUIDATIONS, **kwargs)]
             elif callback_type == L2_BOOK:
-                # cb[L2_BOOK] = [book_cb(key=L2_BOOK, snapshot_interval=feed_config.get('snapshot_interval', 1000), **kwargs)]
                 cb[L2_BOOK] = [book_cb(key=topic_key+L2_BOOK, snapshot_interval=feed_config.get('snapshot_interval', 1000), **kwargs)]
             elif callback_type == L3_BOOK:
-                # cb[L3_BOOK] = [book_cb(key=L3_BOOK, snapshot_interval=feed_config.get('snapshot_interval', 1000), **kwargs)]
                 cb[L3_BOOK] = [book_cb(key=topic_key+L3_BOOK, snapshot_interval=feed_config.get('snapshot_interval', 1000), **kwargs)]
             elif callback_type == OPEN_INTEREST:
-                # cb[OPEN_INTEREST] = [oi_cb(**kwargs)]
                 cb[OPEN_INTEREST] = [oi_cb(key=topic_key+OPEN_INTEREST, **kwargs)]
             elif callback_type == CANDLES:
-                # cb[CANDLES] = [candles_cb(**kwargs)]
                 cb[CANDLES] = [candles_cb(key=topic_key+CANDLES, **kwargs)]
             # callback setting for only binance user data stream... @logan
             elif callback_type == BALANCES:
-                kwargs['schema_registry_ip'] = self.config['kafka']['schema_registry_ip']
-                kwargs['schema_registry_port'] = self.config['kafka']['schema_registry_port']
-                cb[BALANCES] = [balances_cb(key=topic_key+BALANCES, **kwargs)]
+                cb[BALANCES] = [balances_cb(key=topic_key+BALANCES, **avro_kwargs)]
             elif callback_type == POSITIONS:
-                kwargs['schema_registry_ip'] = self.config['kafka']['schema_registry_ip']
-                kwargs['schema_registry_port'] = self.config['kafka']['schema_registry_port']
-                cb[POSITIONS] = [positions_cb(key=topic_key+POSITIONS, **kwargs)]
+                cb[POSITIONS] = [positions_cb(key=topic_key+POSITIONS, **avro_kwargs)]
             elif callback_type == ORDER_INFO:
-                kwargs['schema_registry_ip'] = self.config['kafka']['schema_registry_ip']
-                kwargs['schema_registry_port'] = self.config['kafka']['schema_registry_port']
-                cb[ORDER_INFO] = [order_info_cb(key=topic_key+ORDER_INFO, **kwargs)]
+                cb[ORDER_INFO] = [order_info_cb(key=topic_key+ORDER_INFO, **avro_kwargs)]
             # elif callback_type == ACCOUNT_CONFIG:
             #     cb[BALACCOUNT_CONFIGANCES] = [balances_cb(key=topic_key+BALANCES, **kwargs)]
                  
