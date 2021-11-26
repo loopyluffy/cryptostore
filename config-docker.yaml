@@ -10,7 +10,7 @@ kafka:
     port: 9092
     schema_registry_ip: '203.245.29.236'
     schema_registry_port: 8081
-    topic_key: 'loopyquant01.03'
+    topic_key: 'loopyquant01.01'
     start_flush: false
 redis:
     ip: '127.0.0.1'
@@ -21,26 +21,23 @@ redis:
     start_flush: true
 
 # exchanges:
-    # BINANCE_FUTURES:
-    #     trades: [BTC-USDT-PERP]
-    #     ticker: [BTC-USDT-PERP, ETH-USDT-PERP]
-    #     funding: [BTC-USDT-PERP, ETH-USDT-PERP]
-    #     balances: []
-    #     positions: []
-    #     order_info: [] 
-    # BINANCE_DELIVERY:
-    #     trades: [BTC-USD-PERP, ETH-USD-PERP, ADA-USD-PERP, LUNA-USD-PERP]
-    #     ticker: [BTC-USD-PERP, ETH-USD-PERP, ADA-USD-PERP, LUNA-USD-PERP]
-    #     funding: [BTC-USD-PERP, ETH-USD-PERP, ADA-USD-PERP, LUNA-USD-PERP]
-    #     balances: []
-    #     positions: []
-    #     order_info: [] 
+#     BINANCE_FUTURES:
+#         trades: [BTC-USDT-PERP, ETH-USDT-PERP, ADA-USDT-PERP, LUNA-USDT-PERP]
+#         ticker: [BTC-USDT-PERP, ETH-USDT-PERP, ADA-USDT-PERP, LUNA-USDT-PERP]
+#         funding: [BTC-USDT-PERP, ETH-USDT-PERP, ADA-USDT-PERP, LUNA-USDT-PERP]USDT-PERP, ETH-USDT-PERP]
+#         balances: []
+#         positions: []
+#         order_info: [] 
+#     BINANCE_DELIVERY:
+#         trades: [BTC-USD-PERP, ETH-USD-PERP, ADA-USD-PERP, LUNA-USD-PERP]
+#         ticker: [BTC-USD-PERP, ETH-USD-PERP, ADA-USD-PERP, LUNA-USD-PERP]
+#         funding: [BTC-USD-PERP, ETH-USD-PERP, ADA-USD-PERP, LUNA-USD-PERP]
+#         balances: []
+#         positions: []
+#         order_info: [] 
 
 # Cryptostore Plugin Interface
 # plugins:
-    # grid_protection_strategy:
-    #     module: [cryptostore.strategy.grid_protection_strategy, GridProtectionStrategy]
-    #     config: sandbox/strategy_config.yaml 
     # grid_trend_strategy:
     #         module: [cryptostore.strategy.grid_trend_strategy, GridTrendStrategy]
     #         config: sandbox/strategy_config.yaml 
