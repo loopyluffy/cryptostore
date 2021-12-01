@@ -42,7 +42,7 @@ class LoopyKafkaProducer:
 
 
 class LoopyAvroKafkaProducer(LoopyKafkaProducer):
-    def __init__(self, ip='127.0.0.1', port=9092, schema_registry_ip='127.0.0.1', schema_registry_port=8081):
+    def __init__(self, ip='127.0.0.1', port=9092, schema_registry_ip='127.0.0.1', schema_registry_port=8081, topic_key=None):
         assert isinstance(schema_registry_ip, str)
         assert isinstance(schema_registry_port, int)
 
@@ -50,6 +50,9 @@ class LoopyAvroKafkaProducer(LoopyKafkaProducer):
 
         self.schema_registry_conf = {'url': f'http://{schema_registry_ip}:{schema_registry_port}'}
         self.schema = {}
+
+        self.topic_key = topic_key
+        # LOG.info(f'topic key registered: {self.topic_key}')
 
     def set_schema(self, key, schema):
         self.schema[key] = schema
@@ -59,64 +62,71 @@ class LoopyAvroKafkaProducer(LoopyKafkaProducer):
             if key not in self.schema and not self.schema[key]:
                 return False
             
-        # schema_registry_conf = {'url': f'{self.schema_registry_ip}:{self.schema_registry_port}'}
-        schema_registry_client = SchemaRegistryClient(self.schema_registry_conf)
+            # schema_registry_conf = {'url': f'{self.schema_registry_ip}:{self.schema_registry_port}'}
+            schema_registry_client = SchemaRegistryClient(self.schema_registry_conf)
 
-        avro_serializer = AvroSerializer(schema_str=self.schema[key],
-                                            schema_registry_client=schema_registry_client)
+            avro_serializer = AvroSerializer(schema_str=self.schema[key],
+                                                schema_registry_client=schema_registry_client)
 
-        producer_conf = {'bootstrap.servers': f'{self.ip}:{self.port}',
-                        'key.serializer': StringSerializer('utf_8'),
-                        'value.serializer': avro_serializer
-                        # # "max.in.flight.requests.per.connection": 1,
-                        # "queue.buffering.max.messages": 1000,
-                        # "queue.buffering.max.ms": 5000,
-                        # "batch.num.messages": 100,
-                        # # "message.max.bytes": 2000000
-                        # # wait messages in queue before send to brokers (batch)
-                        # "linger.ms": 5000
-        }
+            producer_conf = {'bootstrap.servers': f'{self.ip}:{self.port}',
+                            'key.serializer': StringSerializer('utf_8'),
+                            'value.serializer': avro_serializer
+                            # # "max.in.flight.requests.per.connection": 1,
+                            # "queue.buffering.max.messages": 1000,
+                            # "queue.buffering.max.ms": 5000,
+                            # "batch.num.messages": 100,
+                            # # "message.max.bytes": 2000000
+                            # # wait messages in queue before send to brokers (batch)
+                            # "linger.ms": 5000
+            }
 
-        self.producer[key] = SerializingProducer(producer_conf)
+            self.producer[key] = SerializingProducer(producer_conf)
 
         return True
 
-    # def write(self, key, data: dict):
-    #     if not self.__connect(key):
-    #         LOG.info('kafka producer connect failed...')
-    #         return False
-
-    #     # topic = f"{self.key}-{data['exchange']}".lower()
-    #     topic = key.lower()
-    #     # Serve on_delivery callbacks from previous calls to produce()
-    #     # self.producer.poll(0.0)
-    #     self.producer[key].produce(topic=topic, key=str(uuid4()), value=data)
-    #     # self.producer.produce(topic=topic, key=str(uuid4()), value=json.dumps(data).encode('utf-8'))
-    #                         #   on_delivery=delivery_report)
-    #     self.producer[key].flush()
-
-    #     return True
-
+    # just produce not flush
     def write(self, key, data: dict):
         if not self.__connect(key):
             LOG.info('kafka producer connect failed...')
             return False
 
-        # topic = f"{self.key}-{data['exchange']}".lower()
-        topic = key.lower()
+        if self.topic_key:
+            topic = self.topic_key + '-' + key
+        else:
+            topic = key
+        topic = topic.lower()
+
+        # LOG.info('topic produce....')
+        # LOG.info(f'{topic}: {data}')
+
         try:
             # Serve on_delivery callbacks from previous calls to produce()
+            # self.producer[key].poll(0.0)
             self.producer[key].produce(topic=topic, key=str(uuid4()), value=data)
             # self.producer.produce(topic=topic, key=str(uuid4()), value=json.dumps(data).encode('utf-8'))
                                 #   on_delivery=delivery_report)
-            # self.producer[key].poll(0.0)
-            self.producer[key].flush()
+            # self.producer[key].flush()
         except BufferError as e:
             LOG.info(e)
             # print(e, file=sys.stderr)
             # producer[key].poll(1)
 
         return True
+
+    def flush(self, key):
+        if key in self.producer and self.producer[key]:
+            self.producer[key].flush()
+
+    # produce and flush
+    def write_force(self, key, data: dict):
+        if self.write(key, data):
+            self.flush(key)
+            return True
+        else:
+            return False
+        if not self.__connect(key):
+            LOG.info('kafka producer connect failed...')
+            return False
 
 
 
