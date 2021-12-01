@@ -67,11 +67,35 @@ class LoopyAvroKafkaProducer(LoopyKafkaProducer):
 
         producer_conf = {'bootstrap.servers': f'{self.ip}:{self.port}',
                         'key.serializer': StringSerializer('utf_8'),
-                        'value.serializer': avro_serializer}
+                        'value.serializer': avro_serializer
+                        # # "max.in.flight.requests.per.connection": 1,
+                        # "queue.buffering.max.messages": 1000,
+                        # "queue.buffering.max.ms": 5000,
+                        # "batch.num.messages": 100,
+                        # # "message.max.bytes": 2000000
+                        # # wait messages in queue before send to brokers (batch)
+                        # "linger.ms": 5000
+        }
 
         self.producer[key] = SerializingProducer(producer_conf)
 
         return True
+
+    # def write(self, key, data: dict):
+    #     if not self.__connect(key):
+    #         LOG.info('kafka producer connect failed...')
+    #         return False
+
+    #     # topic = f"{self.key}-{data['exchange']}".lower()
+    #     topic = key.lower()
+    #     # Serve on_delivery callbacks from previous calls to produce()
+    #     # self.producer.poll(0.0)
+    #     self.producer[key].produce(topic=topic, key=str(uuid4()), value=data)
+    #     # self.producer.produce(topic=topic, key=str(uuid4()), value=json.dumps(data).encode('utf-8'))
+    #                         #   on_delivery=delivery_report)
+    #     self.producer[key].flush()
+
+    #     return True
 
     def write(self, key, data: dict):
         if not self.__connect(key):
@@ -80,16 +104,19 @@ class LoopyAvroKafkaProducer(LoopyKafkaProducer):
 
         # topic = f"{self.key}-{data['exchange']}".lower()
         topic = key.lower()
-        # Serve on_delivery callbacks from previous calls to produce()
-        # self.producer.poll(0.0)
-        self.producer[key].produce(topic=topic, key=str(uuid4()), value=data)
-        # self.producer.produce(topic=topic, key=str(uuid4()), value=json.dumps(data).encode('utf-8'))
-                            #   on_delivery=delivery_report)
-        self.producer[key].flush()
+        try:
+            # Serve on_delivery callbacks from previous calls to produce()
+            self.producer[key].produce(topic=topic, key=str(uuid4()), value=data)
+            # self.producer.produce(topic=topic, key=str(uuid4()), value=json.dumps(data).encode('utf-8'))
+                                #   on_delivery=delivery_report)
+            # self.producer[key].poll(0.0)
+            self.producer[key].flush()
+        except BufferError as e:
+            LOG.info(e)
+            # print(e, file=sys.stderr)
+            # producer[key].poll(1)
 
         return True
-
-
 
 
 
