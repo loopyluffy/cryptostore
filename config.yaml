@@ -17,8 +17,6 @@ kafka:
     schema_registry_ip: '203.245.29.236'
     schema_registry_port: 8081
     topic_key: 'loopyquant00.01'
-    # ip: 'broker'
-    # port: 29092
     # topic_key: 'loopyquant01.01'
     start_flush: false
 redis:

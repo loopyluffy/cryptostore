@@ -8,6 +8,7 @@ kafka:
     # port: 29092
     ip: '203.245.29.236' 
     port: 9092
+    # schema_registry_ip: 'schema-registry'
     schema_registry_ip: '203.245.29.236'
     schema_registry_port: 8081
     topic_key: 'loopyquant01.01'
