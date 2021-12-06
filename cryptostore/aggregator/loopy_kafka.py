@@ -124,7 +124,8 @@ class LoopyKafka(Kafka):
             kafka = StorageEngines['confluent_kafka.admin']
             current_offset, latest_offset = self._conn(key).get_watermark_offsets(kafka.TopicPartition(key, 0))
             read_offset = self.ids[key].offset()
-            if read_offset is None or latest_offset is None or read_offset < latest_offset - 1:
+            # if read_offset is None or latest_offset is None or read_offset < latest_offset - 1:
+            if read_offset is None or latest_offset is None or read_offset < latest_offset - 10:
                 # LOG.info(f'{key}: check to cosume from latest, read_offset: {read_offset}, latest_offset:{latest_offset}')
                 return []
             # else:

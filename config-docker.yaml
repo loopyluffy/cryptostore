@@ -30,9 +30,9 @@ redis:
 #         positions: []
 #         order_info: [] 
 #     BINANCE_DELIVERY:
-#         trades: [BTC-USD-PERP, ETH-USD-PERP, ADA-USD-PERP, LUNA-USD-PERP]
-#         ticker: [BTC-USD-PERP, ETH-USD-PERP, ADA-USD-PERP, LUNA-USD-PERP]
-#         funding: [BTC-USD-PERP, ETH-USD-PERP, ADA-USD-PERP, LUNA-USD-PERP]
+#         trades: [BTC-USD-PERP, ETH-USD-PERP, ADA-USD-PERP, LUNA-USD-PERP, BNB-USD-PERP]
+#         ticker: [BTC-USD-PERP, ETH-USD-PERP, ADA-USD-PERP, LUNA-USD-PERP, BNB-USD-PERP]
+#         funding: [BTC-USD-PERP, ETH-USD-PERP, ADA-USD-PERP, LUNA-USD-PERP, BNB-USD-PERP]
 #         balances: []
 #         positions: []
 #         order_info: [] 
