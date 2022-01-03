@@ -23,9 +23,9 @@ redis:
 
 # exchanges:
 #     BINANCE_FUTURES:
-#         trades: [BTC-USDT-PERP, ETH-USDT-PERP, ADA-USDT-PERP, LUNA-USDT-PERP]
-#         ticker: [BTC-USDT-PERP, ETH-USDT-PERP, ADA-USDT-PERP, LUNA-USDT-PERP]
-#         funding: [BTC-USDT-PERP, ETH-USDT-PERP, ADA-USDT-PERP, LUNA-USDT-PERP]
+#         trades: [BTC-USDT-PERP, ETH-USDT-PERP, ADA-USDT-PERP, LUNA-USDT-PERP, BNB-USD-PERP]
+#         ticker: [BTC-USDT-PERP, ETH-USDT-PERP, ADA-USDT-PERP, LUNA-USDT-PERP, BNB-USD-PERP]
+#         funding: [BTC-USDT-PERP, ETH-USDT-PERP, ADA-USDT-PERP, LUNA-USDT-PERP, BNB-USD-PERP]
 #         balances: []
 #         positions: []
 #         order_info: [] 
@@ -39,9 +39,9 @@ redis:
 
 # Cryptostore Plugin Interface
 # plugins:
-    # grid_trend_strategy:
-    #         module: [cryptostore.strategy.grid_trend_strategy, GridTrendStrategy]
-    #         config: sandbox/strategy_config.yaml 
+    # trend_macd_strategy:
+    #     module: [cryptostore.strategy.trend_macd_strategy, TrendMACDStrategy]
+    #     config: sandbox/strategy_config.yaml 
     # market_info_feed:
     #     module: [cryptostore.strategy.market_info_feed, MarketInfoFeed]
     #     config: sandbox/strategy_config.yaml 

@@ -74,9 +74,9 @@ exchanges:
         trades: [BTC-USDT-PERP, ETH-USDT-PERP, ADA-USDT-PERP, LUNA-USDT-PERP]
         ticker: [BTC-USDT-PERP, ETH-USDT-PERP, ADA-USDT-PERP, LUNA-USDT-PERP]
         funding: [BTC-USDT-PERP, ETH-USDT-PERP, ADA-USDT-PERP, LUNA-USDT-PERP]
-    #     balances: []
-    #     positions: []
-    #     order_info: []
+        balances: []
+        positions: []
+        order_info: []
         
     BINANCE_DELIVERY:
         channel_timeouts:
@@ -92,12 +92,12 @@ exchanges:
         #     book_delta: true
         #     depth_interval: 1000ms
         #     book_interval: 100000
-        trades: [BTC-USD-PERP, ETH-USD-PERP, ADA-USD-PERP, LUNA-USD-PERP, BNB-USD-PERP]
-        ticker: [BTC-USD-PERP, ETH-USD-PERP, ADA-USD-PERP, LUNA-USD-PERP, BNB-USD-PERP]
-        funding: [BTC-USD-PERP, ETH-USD-PERP, ADA-USD-PERP, LUNA-USD-PERP, BNB-USD-PERP]
-        balances: []
-        positions: []
-        order_info: [] 
+        # trades: [BTC-USD-PERP, ETH-USD-PERP, ADA-USD-PERP, LUNA-USD-PERP, BNB-USD-PERP]
+        # ticker: [BTC-USD-PERP, ETH-USD-PERP, ADA-USD-PERP, LUNA-USD-PERP, BNB-USD-PERP]
+        # funding: [BTC-USD-PERP, ETH-USD-PERP, ADA-USD-PERP, LUNA-USD-PERP, BNB-USD-PERP]
+        # balances: []
+        # positions: []
+        # order_info: [] 
 
     # BINANCE:
     #     l2_book:
@@ -268,8 +268,14 @@ plugins:
     # grid_trend_strategy:
     #     module: [cryptostore.strategy.grid_trend_strategy, GridTrendStrategy]
     #     config: sandbox/strategy_config.yaml 
-    market_info_feed:
-        module: [cryptostore.strategy.market_info_feed, MarketInfoFeed]
+    # market_info_feed:
+    #     module: [cryptostore.strategy.market_info_feed, MarketInfoFeed]
+    #     config: sandbox/strategy_config.yaml 
+    # grid_moving_strategy:
+    #     module: [cryptostore.strategy.grid_moving_strategy, GridMovingStrategy]
+    #     config: sandbox/strategy_config.yaml 
+    trend_macd_strategy:
+        module: [cryptostore.strategy.trend_macd_strategy, TrendMACDStrategy]
         config: sandbox/strategy_config.yaml 
     # restfeed:
     #     module: [cryptofeed.plugin.restfeed, Restfeed]

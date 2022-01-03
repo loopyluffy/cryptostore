@@ -86,6 +86,11 @@ class LoopyAvroKafkaProducer(LoopyKafkaProducer):
 
     # just produce not flush
     def write(self, key, data: dict):
+        if not data:
+            return False
+        # else:
+        #     LOG.info(data)
+
         if not self.__connect(key):
             LOG.info('kafka producer connect failed...')
             return False

@@ -28,20 +28,32 @@ class LoopyKafka(Kafka):
 
     def _conn(self, key):
         if key not in self.conn:
+            client = AdminClient({'bootstrap.servers': f"{self.ip}:{self.port}"})    
+            topic_metadata = client.list_topics()
+            if topic_metadata.topics.get(key) is None:
+                return None
+
             self.ids[key] = None
             # if key not in self.group_ids:
             #     self.group_ids[key] = f'{self.group_id}-{key}' 
             kafka = StorageEngines.confluent_kafka
-            self.conn[key] = kafka.Consumer({'bootstrap.servers': f"{self.ip}:{self.port}",
-                                            #  'client.id': f'loopyquant_strategy-{key}',
-                                             'client.id': self.group_id,
-                                             'enable.auto.commit': False,
-                                            #  'group.id': f'{self.group_id}-{key}',
-                                             'group.id': self.group_id,
-                                             'max.poll.interval.ms': 3000000,
-                                            #  to read the message from latest @logan
-                                             "auto.offset.reset" : "latest"})
-            self.conn[key].subscribe([key])
+            consumer_conf = {
+                'bootstrap.servers': f"{self.ip}:{self.port}",
+                #  'client.id': f'loopyquant_strategy-{key}',
+                #  'group.id': f'{self.group_id}-{key}',
+                'client.id': self.group_id,
+                'group.id': self.group_id,
+                # 'max.poll.interval.ms': 3000000,
+                #  to read the message from latest @logan
+                'default.topic.config': {
+                    'auto.offset.reset': 'latest', 
+                    'enable.auto.commit': False
+                }
+            }
+            self.conn[key] = kafka.Consumer(consumer_conf)
+            # self.conn[key].subscribe([key])
+            # to read lastest 
+            self.conn[key].subscribe([key], on_assign=self._on_assign)
             # to offset latest... @logan
             # self.conn[key].subscribe([key], on_assign=seek_to_end)
             # last_offset = self.conn[key].end_offsets([kafka.TopicPartition(key, 0)])[0]
@@ -52,9 +64,89 @@ class LoopyKafka(Kafka):
 
         return self.conn[key]
 
-    def reset_latest(self, topic_key, exchange, feed):
+    def _on_assign(self, consumer, partitions):
+        # set offset for topics
+        topic = partitions[0].topic
+        # LOG.info(f"kafka consumer on_assign [{topic}]")
+        offset = 0
+        # feed = [L2_BOOK, L3_BOOK, TRADES, TICKER, FUNDING, OPEN_INTEREST, BALANCES, POSITIONS, ORDER_INFO]
+        feeds = [BALANCES, POSITIONS, 'view_macd_signal', 'view_atr']
+        if any(feed in topic for feed in feeds):
+            offset = 10
+
+        if offset > 0:
+            # get offset tuple from the first partition
+            first_offset, last_offset = consumer.get_watermark_offsets(partitions[0])
+            # position [1] being the last index
+            read_offset = last_offset - offset
+            if read_offset >= first_offset:
+                partitions[0].offset = last_offset - offset
+                consumer.assign(partitions)
+            # LOG.info(f"kafka consumer on_assign [first_offset: {first_offset}, latest_offset: {last_offset}, read_offset: {read_offset}]")
+
+    def read(self, topic_key, feed, exchange=None, latest_offset=False):
+        if exchange:
+            key = f'{topic_key}-{feed}-{exchange}'.lower()
+        else:
+            key = f'{topic_key}-{feed}'.lower()
+
+        data = self._conn(key).consume(1000000, timeout=0.5)
+
+        # LOG.info(f'LoopyKafka Read Topic: {key}')
+        # if len(data) > 0:
+        #     LOG.info("%s: Read %d messages from Kafka", key, len(data))
+            
+        ret = []
+
+        for message in data:
+            self.ids[key] = message
+            msg = message.value().decode('utf8')
+            try:
+                update = json.loads(msg)
+            except Exception:
+                if 'Subscribed topic not available' in msg:
+                    return ret
+            if feed in {L2_BOOK, L3_BOOK}:
+                update = book_flatten(update, update['timestamp'], update['delta'], update['receipt_timestamp'])
+                ret.extend(update)
+            elif feed in {TRADES, TICKER, FUNDING, OPEN_INTEREST, BALANCES, POSITIONS, ORDER_INFO}:
+                ret.append(update)
+            elif feed in {'view_grid_safety', 'view_macd_signal', 'view_atr'}:
+                ret.append(update['payload'])
+
+        if latest_offset == True and self.ids[key] is not None:
+            kafka = StorageEngines['confluent_kafka.admin']
+            current_offset, latest_offset = self._conn(key).get_watermark_offsets(kafka.TopicPartition(key, 0))
+            read_offset = self.ids[key].offset()
+            # if read_offset is None or latest_offset is None or read_offset < latest_offset - 1:
+            if read_offset is None or latest_offset is None or read_offset < latest_offset - 10:
+                LOG.info(f'{key}: check to consume from latest, read_offset: {read_offset}, latest_offset:{latest_offset}')
+                return []
+            # else:
+            #     LOG.info("%s: Read %d messages from Kafka", key, len(data))
+            #     LOG.info(f'{key}: check to cosume from latest, read_offset: {read_offset}, latest_offset:{latest_offset}')
+
+        # LOG.info(f'return messages: {feed}: {ret}')
+        return ret
+
+    def delete(self, topic_key, feed, exchange=None):
+        # if exchange:
+        #     key = f'{topic_key}-{feed}-{exchange}'.lower()
+        # else:
+        #     key = f'{topic_key}-{feed}'.lower()
+        # # LOG.info("%s: Committing offset %d", key, self.ids[key].offset())
+        # self._conn(key).commit(message=self.ids[key])
+        # self.ids[key] = None
+
+        # try not to commit to read from latest offset (with 'auto.offset.reset': 'latest')
+        return
+
+    def reset_latest(self, topic_key, feed, exchange=None):
         kafka = StorageEngines.confluent_kafka
-        key = f'{topic_key}-{feed}-{exchange}'.lower()
+        if exchange:
+            key = f'{topic_key}-{feed}-{exchange}'.lower()
+        else:
+            key = f'{topic_key}-{feed}'.lower()
         if key not in self.conn:
             self.ids[key] = None
             kafka = StorageEngines.confluent_kafka
@@ -94,51 +186,6 @@ class LoopyKafka(Kafka):
             self.ids[key] = message
         LOG.info("%s: Committing offset %d", key, self.ids[key].offset())
         consumer.commit(message=self.ids[key])
-        self.ids[key] = None
-
-    def read(self, topic_key, exchange, feed, latest_offset=True):
-        key = f'{topic_key}-{feed}-{exchange}'.lower()
-
-        data = self._conn(key).consume(1000000, timeout=0.5)
-
-        # if len(data) > 0:
-        #     LOG.info("%s: Read %d messages from Kafka", key, len(data))
-            
-        ret = []
-
-        for message in data:
-            self.ids[key] = message
-            msg = message.value().decode('utf8')
-            try:
-                update = json.loads(msg)
-            except Exception:
-                if 'Subscribed topic not available' in msg:
-                    return ret
-            if feed in {L2_BOOK, L3_BOOK}:
-                update = book_flatten(update, update['timestamp'], update['delta'], update['receipt_timestamp'])
-                ret.extend(update)
-            if feed in {TRADES, TICKER, FUNDING, OPEN_INTEREST, BALANCES, POSITIONS, ORDER_INFO}:
-                ret.append(update)
-
-        if latest_offset == True and self.ids[key] is not None:
-            kafka = StorageEngines['confluent_kafka.admin']
-            current_offset, latest_offset = self._conn(key).get_watermark_offsets(kafka.TopicPartition(key, 0))
-            read_offset = self.ids[key].offset()
-            # if read_offset is None or latest_offset is None or read_offset < latest_offset - 1:
-            if read_offset is None or latest_offset is None or read_offset < latest_offset - 10:
-                # LOG.info(f'{key}: check to cosume from latest, read_offset: {read_offset}, latest_offset:{latest_offset}')
-                return []
-            # else:
-            #     LOG.info("%s: Read %d messages from Kafka", key, len(data))
-            #     LOG.info(f'{key}: check to cosume from latest, read_offset: {read_offset}, latest_offset:{latest_offset}')
-
-        # LOG.info(f'return messages: {feed}: {ret}')
-        return ret
-
-    def delete(self, topic_key, exchange, feed):
-        key = f'{topic_key}-{feed}-{exchange}'.lower()
-        # LOG.info("%s: Committing offset %d", key, self.ids[key].offset())
-        self._conn(key).commit(message=self.ids[key])
         self.ids[key] = None
 
 
@@ -285,16 +332,29 @@ class LoopyAvroKafka(LoopyKafka):
             avro_deserializer = AvroDeserializer(schema_str=schema_str,
                                                  schema_registry_client=schema_registry_client)
             string_deserializer = StringDeserializer('utf_8')
-            consumer_conf = {'bootstrap.servers': f"{self.ip}:{self.port}",
-                            'key.deserializer': string_deserializer,
-                            'value.deserializer': avro_deserializer,
-                            # 'group.id': f'{self.group_id}-{key}',
-                            'group.id': self.group_id,
-                            'auto.offset.reset': "latest"}
+            # consumer_conf = {'bootstrap.servers': f"{self.ip}:{self.port}",
+            #                 'key.deserializer': string_deserializer,
+            #                 'value.deserializer': avro_deserializer,
+            #                 # 'group.id': f'{self.group_id}-{key}',
+            #                 'group.id': self.group_id,
+            #                 'auto.offset.reset': "latest"}
+            consumer_conf = {
+                'bootstrap.servers': f"{self.ip}:{self.port}",
+                'key.deserializer': string_deserializer,
+                'value.deserializer': avro_deserializer,
+                'client.id': self.group_id,
+                'group.id': self.group_id,
+                'default.topic.config': {
+                    'auto.offset.reset': 'latest', 
+                    'enable.auto.commit': False
+                }
+            }
             self.conn[key] = DeserializingConsumer(consumer_conf)
 
             # try:
-            self.conn[key].subscribe([key])
+            # self.conn[key].subscribe([key])
+            # to read lastest 
+            self.conn[key].subscribe([key], on_assign=super()._on_assign)
         #     except KafkaException as e:
         #         LOG.info(f"Kafka DeserializingConsumer subscribe exception: {str(e)}")
         #         pass
@@ -313,7 +373,7 @@ class LoopyAvroKafka(LoopyKafka):
     def _consume(self, key, timeout=1.0):
         ret = []
         if self._conn(key) is None:
-                    return ret
+            return ret
 
         interval_start = time.time()
         while True:
