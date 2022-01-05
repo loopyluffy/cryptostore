@@ -65,18 +65,18 @@ exchanges:
             funding: -1
         retries: -1
 
-    #     # l2_book:
-    #     #     symbols: [BTC-USDT-PERP]
-    #     #     max_depth: 10
-    #     #     book_delta: true
-    #     #     depth_interval: 1000ms
-    #     #     book_interval: 100000
-        trades: [BTC-USDT-PERP, ETH-USDT-PERP, ADA-USDT-PERP, LUNA-USDT-PERP]
-        ticker: [BTC-USDT-PERP, ETH-USDT-PERP, ADA-USDT-PERP, LUNA-USDT-PERP]
-        funding: [BTC-USDT-PERP, ETH-USDT-PERP, ADA-USDT-PERP, LUNA-USDT-PERP]
-        balances: []
-        positions: []
-        order_info: []
+        # l2_book:
+        #     symbols: [BTC-USDT-PERP]
+        #     max_depth: 10
+        #     book_delta: true
+        #     depth_interval: 1000ms
+        #     book_interval: 100000
+        # trades: [BTC-USDT-PERP, ETH-USDT-PERP, ADA-USDT-PERP, LUNA-USDT-PERP]
+        # ticker: [BTC-USDT-PERP, ETH-USDT-PERP, ADA-USDT-PERP, LUNA-USDT-PERP]
+        # funding: [BTC-USDT-PERP, ETH-USDT-PERP, ADA-USDT-PERP, LUNA-USDT-PERP]
+        # balances: []
+        # positions: []
+        # order_info: []
         
     BINANCE_DELIVERY:
         channel_timeouts:

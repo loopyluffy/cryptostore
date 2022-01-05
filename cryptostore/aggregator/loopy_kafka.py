@@ -65,24 +65,25 @@ class LoopyKafka(Kafka):
         return self.conn[key]
 
     def _on_assign(self, consumer, partitions):
-        # set offset for topics
-        topic = partitions[0].topic
-        # LOG.info(f"kafka consumer on_assign [{topic}]")
-        offset = 0
-        # feed = [L2_BOOK, L3_BOOK, TRADES, TICKER, FUNDING, OPEN_INTEREST, BALANCES, POSITIONS, ORDER_INFO]
-        feeds = [BALANCES, POSITIONS, 'view_macd_signal', 'view_atr']
-        if any(feed in topic for feed in feeds):
-            offset = 10
+        if partitions:
+            # set offset for topics
+            topic = partitions[0].topic
+            # LOG.info(f"kafka consumer on_assign [{topic}]")
+            offset = 0
+            # feed = [L2_BOOK, L3_BOOK, TRADES, TICKER, FUNDING, OPEN_INTEREST, BALANCES, POSITIONS, ORDER_INFO]
+            feeds = [BALANCES, POSITIONS, 'view_macd_signal', 'view_atr']
+            if any(feed in topic for feed in feeds):
+                offset = 10
 
-        if offset > 0:
-            # get offset tuple from the first partition
-            first_offset, last_offset = consumer.get_watermark_offsets(partitions[0])
-            # position [1] being the last index
-            read_offset = last_offset - offset
-            if read_offset >= first_offset:
-                partitions[0].offset = last_offset - offset
-                consumer.assign(partitions)
-            # LOG.info(f"kafka consumer on_assign [first_offset: {first_offset}, latest_offset: {last_offset}, read_offset: {read_offset}]")
+            if offset > 0:
+                # get offset tuple from the first partition
+                first_offset, last_offset = consumer.get_watermark_offsets(partitions[0])
+                # position [1] being the last index
+                read_offset = last_offset - offset
+                if read_offset >= first_offset:
+                    partitions[0].offset = last_offset - offset
+                    consumer.assign(partitions)
+                # LOG.info(f"kafka consumer on_assign [first_offset: {first_offset}, latest_offset: {last_offset}, read_offset: {read_offset}]")
 
     def read(self, topic_key, feed, exchange=None, latest_offset=False):
         if exchange:
