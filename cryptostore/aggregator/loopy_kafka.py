@@ -71,9 +71,12 @@ class LoopyKafka(Kafka):
             # LOG.info(f"kafka consumer on_assign [{topic}]")
             offset = 0
             # feed = [L2_BOOK, L3_BOOK, TRADES, TICKER, FUNDING, OPEN_INTEREST, BALANCES, POSITIONS, ORDER_INFO]
-            feeds = [BALANCES, POSITIONS, 'view_macd_signal', 'view_atr']
-            if any(feed in topic for feed in feeds):
+            feeds10 = [BALANCES, POSITIONS]
+            feeds20 = ['view_macd_signal', 'view_atr']
+            if any(feed in topic for feed in feeds10):
                 offset = 10
+            elif any(feed in topic for feed in feeds20):
+                offset = 20
 
             if offset > 0:
                 # get offset tuple from the first partition
