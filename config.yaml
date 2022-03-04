@@ -278,12 +278,12 @@ plugins:
     # market_info_feed:
     #     module: [cryptostore.strategy.market_info_feed, MarketInfoFeed]
     #     config: sandbox/strategy_config.yaml 
-    grid_moving_strategy2:
-        module: [cryptostore.strategy.grid_moving_strategy2, GridMovingStrategy]
-        config: sandbox/strategy_config.yaml 
-    # trend_macd_strategy:
-    #     module: [cryptostore.strategy.trend_macd_strategy, TrendMACDStrategy]
+    # grid_moving_strategy2:
+    #     module: [cryptostore.strategy.grid_moving_strategy2, GridMovingStrategy]
     #     config: sandbox/strategy_config.yaml 
+    trend_macd_strategy:
+        module: [cryptostore.strategy.trend_macd_strategy2, TrendMACDStrategy]
+        config: sandbox/strategy_config.yaml 
     # restfeed:
     #     module: [cryptofeed.plugin.restfeed, Restfeed]
     #     config: config.yaml
