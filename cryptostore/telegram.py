@@ -35,7 +35,22 @@ class TelegramBot:
         self.chat_id = chat_id
 
     def send_message(self, text):
-        self.updater.bot.sendMessage(chat_id=self.chat_id, text=text)
+        # self.updater.bot.sendMessage(chat_id=self.chat_id, text=text)
+        try:
+            self.updater.bot.sendMessage(chat_id=self.chat_id, text=text)
+        # except BadRequest as e:
+        #     LOG.info(e)
+        # except RetryAfter as e:
+        #     # sleep(240)
+        # except TimedOut as e:
+        #     # sleep(60)
+        # except Unauthorized as e:
+        #     # sleep(0.25)
+        # except NetworkError as e:
+        #     # sleep(30)
+        except Exception as e:
+            LOG.info(e)
+            pass
 
     def stop(self):
         self.updater.start_polling()
